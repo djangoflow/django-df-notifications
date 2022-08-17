@@ -1,4 +1,5 @@
 from django.contrib import admin
+from fcm_django.admin import DeviceAdmin
 
 from .models import NotificationHistory, UserDevice
 
@@ -18,3 +19,8 @@ class NotificationHistoryAdmin(admin.ModelAdmin):
         "get_users",
         "subject",
     )
+
+
+@admin.register(UserDevice)
+class UserDeviceAdmin(DeviceAdmin):
+    pass

@@ -1,7 +1,0 @@
-django
-djangorestframework
-firebase_admin
-requests
-django_slack
-fcm_django
-django-hashid-field
