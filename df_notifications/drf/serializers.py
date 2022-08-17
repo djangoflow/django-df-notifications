@@ -1,6 +1,5 @@
-from fcm_django.api.rest_framework import FCMDeviceSerializer
-
 from df_notifications.models import UserDevice
+from fcm_django.api.rest_framework import FCMDeviceSerializer
 
 
 class UserDeviceSerializer(FCMDeviceSerializer):

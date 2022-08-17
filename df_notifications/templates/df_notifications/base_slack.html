@@ -1,0 +1,5 @@
+{% extends django_slack %}
+
+{% block text %}
+Message text here: {{ foo.bar|urlize }} {{ foo.user.get_full_name|safe }}
+{% endblock %}

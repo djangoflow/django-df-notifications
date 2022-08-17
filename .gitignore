@@ -133,3 +133,5 @@ tests
 manage.py
 requirements.txt
 
+
+.idea

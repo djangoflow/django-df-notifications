@@ -36,7 +36,7 @@ class Migration(migrations.Migration):
             name='NotificationHistory',
             fields=[
                 ('id', hashid_field.field.BigHashidAutoField(alphabet='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890', auto_created=True, min_length=13, prefix='', primary_key=True, serialize=False, verbose_name='ID')),
-                ('channel', models.PositiveSmallIntegerField(choices=[(100, 'push'), (200, 'email'), (300, 'sms'), (400, 'call'), (500, 'chat'), (600, 'slack'), (700, 'webhook')])),
+                ('channel', models.PositiveSmallIntegerField(choices=[(100, 'push'), (200, 'email'), (300, 'sms'), (400, 'call'), (500, 'chat'), (600, 'slack'), (700, 'webhook'), (1000000, 'console')])),
                 ('subject', models.CharField(max_length=1024)),
                 ('body', models.TextField(blank=True, null=True)),
                 ('body_html', models.TextField(blank=True, null=True)),

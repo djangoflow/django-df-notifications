@@ -41,7 +41,7 @@ Principles
 Endpoints
 ---------
 
-* `device/`
+* `devices/`
 
 Data model
 ----------

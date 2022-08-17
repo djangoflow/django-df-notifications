@@ -1,15 +1,18 @@
-import json
-import logging
-
-import requests
 from django.contrib.auth import get_user_model
 from django.core.mail import EmailMultiAlternatives
 from django.db import models
-from django.template import Context, Template
-from django_slack import slack_message
-from firebase_admin.messaging import Message, Notification
-from fcm_django.models import AbstractFCMDevice
+from django.template import Context
+from django.template import Template
 from django.utils.translation import gettext_lazy as _
+from django_slack import slack_message
+from fcm_django.models import AbstractFCMDevice
+from firebase_admin.messaging import Message
+from firebase_admin.messaging import Notification
+
+import json
+import logging
+import requests
+
 
 User = get_user_model()
 
@@ -56,10 +59,10 @@ class AbstractNotification(AbstractNotificationBase):
         return UserDevice.objects.all()
 
     def send(
-            self,
-            users=None,
-            context=None,
-            attachments=None,
+        self,
+        users=None,
+        context=None,
+        attachments=None,
     ):
         users = users or []
         attachments = attachments or []
@@ -80,12 +83,15 @@ class AbstractNotification(AbstractNotificationBase):
         body_html = Template(
             (
                 f'{{% extends "{self.email_template}"%}}{{% block body %}}'
-                f'{self.body_html}{{% endblock %}}'
-            ) if self.channel == NotificationChannels.EMAIL else self.body_html
+                f"{self.body_html}{{% endblock %}}"
+            )
+            if self.channel == NotificationChannels.EMAIL
+            else self.body_html
         ).render(_context)
 
         if self.channel == NotificationChannels.EMAIL:
-            msg = EmailMultiAlternatives(subject=subject, to=users, body=body)
+            to_emails = [user.email for user in users if user.email]
+            msg = EmailMultiAlternatives(subject=subject, to=to_emails, body=body)
             msg.attach_alternative(body_html, "text/html")
             for attachment in attachments:
                 msg.attach(**attachment)
@@ -104,11 +110,12 @@ class AbstractNotification(AbstractNotificationBase):
                 ),
             )
         elif self.channel == NotificationChannels.SLACK:
-            slack_message(
+            x = slack_message(
                 self.slack_template,
                 context=context,
                 attachments=[{"text": body, "title": subject}],
             )
+            print(x)
         elif self.channel == NotificationChannels.WEBHOOK:
             requests.post(subject, data=body, json=data)
         elif self.channel == NotificationChannels.CONSOLE:

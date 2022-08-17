@@ -1,7 +1,8 @@
+from .models import NotificationHistory
+from .models import UserDevice
 from django.contrib import admin
 from fcm_django.admin import DeviceAdmin
-
-from .models import NotificationHistory, UserDevice
+from fcm_django.models import FCMDevice
 
 
 @admin.register(NotificationHistory)
@@ -19,6 +20,9 @@ class NotificationHistoryAdmin(admin.ModelAdmin):
         "get_users",
         "subject",
     )
+
+
+admin.site.unregister(FCMDevice)
 
 
 @admin.register(UserDevice)

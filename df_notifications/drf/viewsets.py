@@ -1,7 +1,6 @@
-from fcm_django.api.rest_framework import FCMDeviceAuthorizedViewSet
-
 from df_notifications.drf.serializers import UserDeviceSerializer
 from df_notifications.models import UserDevice
+from fcm_django.api.rest_framework import FCMDeviceAuthorizedViewSet
 
 
 class UserDeviceViewSet(FCMDeviceAuthorizedViewSet):
