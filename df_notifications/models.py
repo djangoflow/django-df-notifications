@@ -47,7 +47,7 @@ class NotificationHistory(AbstractNotificationBase):
     )
 
     class Meta:
-        verbose_name_plural = "Notification History"
+        verbose_name_plural = "Notification history"
 
 
 class AbstractNotification(AbstractNotificationBase):
