@@ -8,6 +8,7 @@ from django_slack import slack_message
 from fcm_django.models import AbstractFCMDevice
 from firebase_admin.messaging import Message
 from firebase_admin.messaging import Notification
+from hashid_field.field import BigHashidAutoField
 
 import json
 import logging
@@ -41,6 +42,10 @@ class AbstractNotificationBase(models.Model):
 
 
 class NotificationHistory(AbstractNotificationBase):
+    id = BigHashidAutoField(
+        verbose_name=_("ID"),
+        primary_key=True,
+    )
     timestamp = models.DateTimeField(auto_now=True)
     users = models.ManyToManyField(
         User, help_text="Users this notification was sent to"
@@ -110,12 +115,11 @@ class AbstractNotification(AbstractNotificationBase):
                 ),
             )
         elif self.channel == NotificationChannels.SLACK:
-            x = slack_message(
+            slack_message(
                 self.slack_template,
                 context=context,
                 attachments=[{"text": body, "title": subject}],
             )
-            print(x)
         elif self.channel == NotificationChannels.WEBHOOK:
             requests.post(subject, data=body, json=data)
         elif self.channel == NotificationChannels.CONSOLE:
