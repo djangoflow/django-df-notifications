@@ -8,7 +8,6 @@ from django_slack import slack_message
 from fcm_django.models import AbstractFCMDevice
 from firebase_admin.messaging import Message
 from firebase_admin.messaging import Notification
-from hashid_field.field import BigHashidAutoField
 
 import json
 import logging
@@ -42,7 +41,7 @@ class AbstractNotificationBase(models.Model):
 
 
 class NotificationHistory(AbstractNotificationBase):
-    id = BigHashidAutoField(
+    id = models.BigAutoField(
         verbose_name=_("ID"),
         primary_key=True,
     )
