@@ -1,4 +1,4 @@
-from django.contrib.auth import get_user_model
+from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.db import models
 from django.template import Context
@@ -12,9 +12,6 @@ from firebase_admin.messaging import Notification
 import json
 import logging
 import requests
-
-
-User = get_user_model()
 
 
 class NotificationChannels(models.IntegerChoices):
@@ -47,7 +44,7 @@ class NotificationHistory(AbstractNotificationBase):
     )
     timestamp = models.DateTimeField(auto_now=True)
     users = models.ManyToManyField(
-        User, help_text="Users this notification was sent to"
+        settings.AUTH_USER_MODEL, help_text="Users this notification was sent to"
     )
 
     class Meta:
