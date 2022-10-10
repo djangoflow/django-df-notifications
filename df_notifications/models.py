@@ -1,4 +1,7 @@
+from celery import current_app as app
+from django.apps import apps
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.mail import EmailMultiAlternatives
 from django.db import models
 from django.template import Context
@@ -23,7 +26,7 @@ class NotificationChannels(models.IntegerChoices):
     SLACK = 600, "slack"
     WEBHOOK = 700, "webhook"
 
-    CONSOLE = 1_000_000, "console"
+    CONSOLE = 1000, "console"
 
 
 class AbstractNotificationBase(models.Model):
@@ -51,8 +54,10 @@ class NotificationHistory(AbstractNotificationBase):
         verbose_name_plural = "Notification history"
 
 
-class AbstractNotification(AbstractNotificationBase):
+class NotificationTemplate(AbstractNotificationBase):
     history = models.ManyToManyField(NotificationHistory, blank=True)
+    slug = models.CharField(max_length=255, unique=True)
+
     email_template = "df_notifications/base_email.html"
     slack_template = "df_notifications/base_slack.html"
 
@@ -138,8 +143,28 @@ class AbstractNotification(AbstractNotificationBase):
         self.data = json.dumps(json.loads(self.data))
         super().save(*args, **kwargs)
 
-    class Meta:
-        abstract = True
+    def send_async(self, users, instance, context=None):
+        send_notification_async.delay(
+            self.pk,
+            [user.pk for user in users],
+            instance._meta.label_lower,
+            instance.pk,
+            additional_context=context,
+        )
+
+
+@app.task
+def send_notification_async(
+    template_pk, user_pks, model_name, model_pk, additional_context=None
+):
+    additional_context = additional_context or {}
+    User = get_user_model()
+    template: NotificationTemplate = NotificationTemplate.objects.get(pk=template_pk)
+    Model = apps.get_model(model_name)
+    instance = Model.objects.get(pk=model_pk)
+    users = User.objects.filter(pk__in=user_pks)
+
+    template.send(users, {"instance": instance, **additional_context})
 
 
 class UserDevice(AbstractFCMDevice):

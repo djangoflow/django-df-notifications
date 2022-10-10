@@ -1,4 +1,5 @@
 from .models import NotificationHistory
+from .models import NotificationTemplate
 from .models import UserDevice
 from django.contrib import admin
 from fcm_django.admin import DeviceAdmin
@@ -28,3 +29,9 @@ admin.site.unregister(FCMDevice)
 @admin.register(UserDevice)
 class UserDeviceAdmin(DeviceAdmin):
     pass
+
+
+@admin.register(NotificationTemplate)
+class NotificationTemplateAdmin(admin.ModelAdmin):
+    search_fields = ("slug",)
+    list_display = ("slug", "channel", "subject")
