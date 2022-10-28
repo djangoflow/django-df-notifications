@@ -25,7 +25,6 @@ class NotificationChannels(models.IntegerChoices):
     CHAT = 500, "chat"
     SLACK = 600, "slack"
     WEBHOOK = 700, "webhook"
-
     CONSOLE = 1000, "console"
 
 
@@ -56,7 +55,20 @@ class NotificationHistory(AbstractNotificationBase):
 
 class NotificationTemplate(AbstractNotificationBase):
     history = models.ManyToManyField(NotificationHistory, blank=True)
-    slug = models.CharField(max_length=255, unique=True)
+    # Example: notifications/bookings/new_booking
+    # The we render {template_prefix}_subject
+    # The we render {template_prefix}_body
+    # The we render {template_prefix}_body_html
+    # The we render {template_prefix}_data
+    # and so on....
+    # We can fall back to _body if body_html does not exist
+    # also have email_body_html -> email_body -> body etc
+    # template will be notificaations/channel/prefix
+    # notifications/push/base_body.txt
+    # notifications/push/base_email_subject.txt
+    # notifications/base_body.html
+
+    template_prefix = models.CharField(max_length=255, unique=True)
 
     email_template = "df_notifications/base_email.html"
     slack_template = "df_notifications/base_slack.html"
