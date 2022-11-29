@@ -148,7 +148,7 @@ class NotificationTemplate(AbstractNotificationBase):
             self.pk,
             [user.pk for user in users],
             instance._meta.label_lower,
-            instance.pk,
+            str(instance.pk),
             additional_context=context,
         )
 
