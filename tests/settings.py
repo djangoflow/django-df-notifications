@@ -16,6 +16,7 @@ INSTALLED_APPS = [
     "fcm_django",
     "df_notifications",
     "django_slack",
+    "import_export",
     "tests.test_app.apps.TestAppConfig",
 ]
 
