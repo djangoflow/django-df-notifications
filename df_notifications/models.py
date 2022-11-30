@@ -146,7 +146,7 @@ class NotificationTemplate(AbstractNotificationBase):
     def send_async(self, users, instance, context=None):
         send_notification_async.delay(
             self.pk,
-            [user.pk for user in users],
+            [str(user.pk) for user in users],
             instance._meta.label_lower,
             str(instance.pk),
             additional_context=context,
