@@ -5,4 +5,5 @@ requests
 django_slack
 fcm_django
 celery
+django-celery-beat
 django-import-export

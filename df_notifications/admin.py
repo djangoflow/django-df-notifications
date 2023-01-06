@@ -1,5 +1,7 @@
 from .models import NotificationChannel
 from .models import NotificationChannelConfigItem
+from .models import NotificationHistory
+from .models import NotificationHistoryPart
 from .models import NotificationTemplate
 from .models import NotificationTemplatePart
 from .models import UserDevice
@@ -101,6 +103,12 @@ class NotificationChannelAdmin(admin.ModelAdmin):
         item = obj.items.first()
         return item.value if item else None
 
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            return ["transport_class"]
+        else:
+            return []
+
 
 class NotificationTemplatePartInline(admin.TabularInline):
     model = NotificationTemplatePart
@@ -126,3 +134,24 @@ class NotificationTemplateAdmin(admin.ModelAdmin):
             return ["channel"]
         else:
             return []
+
+
+class NotificationHistoryPartInline(admin.TabularInline):
+    model = NotificationHistoryPart
+    fields = ("name", "content")
+    fk_name = "notification"
+    readonly_fields = ("name", "content")
+    extra = 0
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(NotificationHistory)
+class NotificationHistoryAdmin(admin.ModelAdmin):
+    list_display = ("template", "user", "created")
+    date_hierarchy = "created"
+    list_filter = ("template", "user")
+    search_fields = ("title",)
+    inlines = (NotificationHistoryPartInline,)

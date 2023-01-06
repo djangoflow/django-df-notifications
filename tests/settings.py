@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     "import_export",
     "tests.test_app.apps.TestAppConfig",
     "dbtemplates",
+    "django_celery_beat",
 ]
 
 MIDDLEWARE = [
@@ -79,6 +80,8 @@ STATIC_URL = "/static/"
 
 ALLOWED_HOSTS = ["*"]
 
-CELERY_BROKER_URL = "redis://127.0.0.1:6379/1"
-# http://docs.celeryproject.org/en/latest/userguide/configuration.html#std:setting-result_backend
-CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+CELERY_BROKER_URL = "memory://"
+CELERY_RESULT_BACKEND = "cache+memory://"
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+CELERY_TASK_ALWAYS_EAGER = True
+CELERY_TASK_EAGER_PROPAGATES = True

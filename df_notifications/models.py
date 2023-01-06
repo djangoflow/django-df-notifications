@@ -1,6 +1,4 @@
-from celery import current_app as app
 from dbtemplates.models import Template as DbTemplate
-from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.core.mail import EmailMultiAlternatives
 from django.db import models
@@ -186,17 +184,6 @@ else:
 #         )
 #
 #
-@app.task
-def send_notification_async(
-    template_pk, user_pk, model_name, model_pk, additional_context=None
-):
-    additional_context = additional_context or {}
-    User = get_user_model()
-    template: NotificationTemplate = NotificationTemplate.objects.get(pk=template_pk)
-    Model = apps.get_model(model_name)
-    instance = Model.objects.get(pk=model_pk)
-    user = User.objects.get(pk=user_pk)
-    template.send(user, context={"instance": instance, **additional_context}, data={})
 
 
 class UserDevice(AbstractFCMDevice):
@@ -305,6 +292,17 @@ class NotificationTemplate(models.Model):
             for part in self.parts.all()
         }
         self.channel.send(user, {**data, **rendered_parts})
+        notification = NotificationHistory.objects.create(
+            user=user,
+            template=self,
+            title=rendered_parts[self.channel.transport.title_part],
+        )
+        for name, content in rendered_parts.items():
+            NotificationHistoryPart.objects.create(
+                notification=notification,
+                name=name,
+                content=content,
+            )
 
     def save(self, *args, **kwargs):
         created = self.pk is None
@@ -358,12 +356,24 @@ class NotificationHistory(models.Model):
         NotificationTemplate, on_delete=models.CASCADE, related_name="history"
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    rendered_parts = models.JSONField()
-    created = models.DateTimeField(auto_now_add=True)
+    created = models.DateTimeField(auto_now_add=True, db_index=True)
+    title = models.CharField(max_length=255)
 
-    @property
-    def title(self):
-        return self.rendered_parts.get(self.template.channel.transport.title_part, "")
+    class Meta:
+        verbose_name_plural = "Notification history"
+
+        indexes = [
+            models.Index(fields=["user", "template", "created"]),
+            models.Index(fields=["template", "created"]),
+        ]
+
+
+class NotificationHistoryPart(models.Model):
+    notification = models.ForeignKey(
+        NotificationHistory, on_delete=models.CASCADE, db_index=True
+    )
+    name = models.CharField(max_length=255)
+    content = models.TextField(default="", blank=True)
 
 
 # ----------- Actions -------------
@@ -373,21 +383,21 @@ class BaseAction(GenericBase[M], models.Model):
     model: Type[M]
 
     @classmethod
-    def get_queryset(cls, instance: M) -> QuerySet["BaseAction"]:
+    def get_queryset(cls, instance: M, prev: Optional[M]) -> QuerySet["BaseAction"]:
         return cls.objects.all()
 
     def condition(self, instance: M, prev: Optional[M]) -> bool:
         return True
 
-    def action(self, instance: M, prev: Optional[M]):
+    def perform_action(self, instance: M, prev: Optional[M]):
         pass
 
     @classmethod
     def invoke(cls, instance: M):
-        for action in cls.get_queryset(instance):
-            prev_instance = getattr(instance, "_pre_save_instance", None)
+        prev_instance = getattr(instance, "_pre_save_instance", None)
+        for action in cls.get_queryset(instance, prev_instance):
             if action.condition(instance, prev_instance):
-                action.action(instance, prev_instance)
+                action.perform_action(instance, prev_instance)
 
     class Meta:
         abstract = True
@@ -407,7 +417,7 @@ class BaseReminder(GenericBase[M], models.Model):
     def condition(self, instance: M) -> bool:
         return True
 
-    def action(self, instance: M):
+    def perform_action(self, instance: M):
         pass
 
     @classmethod
@@ -415,10 +425,13 @@ class BaseReminder(GenericBase[M], models.Model):
         for reminder in cls.get_queryset():
             for instance in reminder.get_model_queryset():
                 if reminder.condition(instance):
-                    reminder.action(instance)
+                    reminder.perform_action(instance)
+
+    class Meta:
+        abstract = True
 
 
-class NotificationAction(BaseAction):
+class NotificationMixin(models.Model):
     template = models.ForeignKey(NotificationTemplate, on_delete=models.CASCADE)
 
     def get_user(self, instance: M, prev: Optional[M]) -> User:
@@ -437,22 +450,48 @@ class NotificationAction(BaseAction):
             data=self.get_additional_data(instance, prev),
         )
 
-    # TODO: make all methods verbs
-    def action(self, instance: M, prev: Optional[M]):
+    class Meta:
+        abstract = True
+
+
+class AsyncNotificationMixin(NotificationMixin):
+    model: Type[M]
+
+    def send_notification(self, instance: M, prev: Optional[M]) -> User:
+        from .tasks import send_notification_async
+
+        send_notification_async.delay(
+            template_pk=self.template.pk,
+            user_pk=self.get_user(instance, prev).pk,
+            model_name=self.model._meta.label_lower,
+            model_pk=instance.pk,
+        )
+
+    class Meta:
+        abstract = True
+
+
+class NotificationAction(BaseAction, NotificationMixin):
+    def perform_action(self, instance: M, prev: Optional[M]):
         self.send_notification(instance, prev)
 
     class Meta:
         abstract = True
 
 
-class NotificationAsyncAction(NotificationAction):
-    def send_notification(self, instance: M, prev: Optional[M]) -> User:
-        send_notification_async.delay(
-            template_pk=self.template.pk,
-            user_pk=self.get_user(instance, prev).pk,
-            model_name=self.model,
-            model_pk=instance.pk,
-        )
+class NotificationReminder(BaseReminder, NotificationMixin):
+    def perform_action(self, instance: M):
+        self.send_notification(instance, None)
 
+    class Meta:
+        abstract = True
+
+
+class NotificationAsyncAction(AsyncNotificationMixin, NotificationAction):
+    class Meta:
+        abstract = True
+
+
+class NotificationAsyncReminder(AsyncNotificationMixin, NotificationReminder):
     class Meta:
         abstract = True
