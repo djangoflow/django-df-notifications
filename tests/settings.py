@@ -10,6 +10,7 @@ INSTALLED_APPS = [
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
+    "django.contrib.sites",
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
@@ -18,6 +19,7 @@ INSTALLED_APPS = [
     "django_slack",
     "import_export",
     "tests.test_app.apps.TestAppConfig",
+    "dbtemplates",
 ]
 
 MIDDLEWARE = [
@@ -34,7 +36,6 @@ TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [],
-        "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.debug",
@@ -42,9 +43,16 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
             ],
+            "loaders": [
+                "django.template.loaders.filesystem.Loader",
+                "django.template.loaders.app_directories.Loader",
+                "dbtemplates.loader.Loader",
+            ],
         },
     },
 ]
+
+SITE_ID = 1
 
 DATABASES = {
     "default": {
