@@ -10,76 +10,12 @@ from fcm_django.admin import DeviceAdmin
 from fcm_django.models import FCMDevice
 
 
-# class NotificationHistoryResourceMixin(resources.ModelResource):
-#     class Meta:
-#         import_id_fields = ("id",)
-#         fields = (
-#             # "id",
-#             "users",
-#             "channel",
-#             "subject",
-#             "body",
-#             "body_html",
-#             "data",
-#             "timestamp",
-#         )
-#         skip_unchanged = True
-#         report_skipped = True
-#         export_order = fields
-#         model = NotificationHistory
-#
-#
-# @admin.register(NotificationHistory)
-# class NotificationHistoryAdmin(ImportExportMixin, admin.ModelAdmin):
-#     resource_class = NotificationHistoryResourceMixin
-#
-#     def get_users(self, obj):
-#         return ",".join(obj.users.values_list("email", flat=True))
-#
-#     get_users.short_description = "users"
-#
-#     date_hierarchy = "timestamp"
-#     search_fields = ("users__email",)
-#     list_display = (
-#         "timestamp",
-#         "channel",
-#         "get_users",
-#         "subject",
-#     )
-#
-#
 admin.site.unregister(FCMDevice)
 
 
 @admin.register(UserDevice)
 class UserDeviceAdmin(DeviceAdmin):
     pass
-
-
-#
-#
-# class NotificationTemplateResourceMixin(resources.ModelResource):
-#     class Meta:
-#         import_id_fields = ("id",)
-#         fields = (
-#             "id",
-#             "channel",
-#             "subject",
-#             "body",
-#             "body_html",
-#             "data",
-#         )
-#         skip_unchanged = True
-#         report_skipped = True
-#         export_order = fields
-#         model = NotificationTemplate
-#
-#
-# @admin.register(NotificationTemplate)
-# class NotificationTemplateAdmin(ImportExportMixin, admin.ModelAdmin):
-#     resource_class = NotificationTemplateResourceMixin
-#     search_fields = ("template_prefix",)
-#     list_display = ("template_prefix", "channel", "subject")
 
 
 class NotificationChannelConfigItemInline(admin.TabularInline):

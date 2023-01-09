@@ -85,3 +85,12 @@ CELERY_RESULT_BACKEND = "cache+memory://"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_TASK_ALWAYS_EAGER = True
 CELERY_TASK_EAGER_PROPAGATES = True
+
+
+DF_NOTIFICATIONS = {
+    "TRANSPORTS": [
+        "df_notifications.transports.EmailTransport",
+        "df_notifications.transports.ConsoleTransport",
+        "tests.transports.TestTransport",
+    ],
+}

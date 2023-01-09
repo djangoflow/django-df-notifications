@@ -1,6 +1,8 @@
 from dbtemplates.models import Template as DbTemplate
+from df_notifications.fields import NoMigrationsChoicesField
+from df_notifications.transports import BaseTransport
+from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.mail import EmailMultiAlternatives
 from django.db import models
 from django.db.models import QuerySet
 from django.template.loader import render_to_string
@@ -10,7 +12,6 @@ from fcm_django.models import AbstractFCMDevice
 from typing import Any
 from typing import Dict
 from typing import Generic
-from typing import List
 from typing import Optional
 from typing import Type
 from typing import TYPE_CHECKING
@@ -36,156 +37,6 @@ else:
             return cls
 
 
-# class NotificationChannels(models.IntegerChoices):
-#     PUSH = 100, "push"
-#     EMAIL = 200, "email"
-#     SMS = 300, "sms"
-#     CALL = 400, "call"
-#     CHAT = 500, "chat"
-#     SLACK = 600, "slack"
-#     WEBHOOK = 700, "webhook"
-#     CONSOLE = 1000, "console"
-#
-#
-# class AbstractNotificationBase(models.Model):
-#     channel = models.PositiveSmallIntegerField(choices=NotificationChannels.choices)
-#     subject = models.CharField(max_length=1024)
-#     body = models.TextField(null=True, blank=True)
-#     body_html = models.TextField(null=True, blank=True)
-#     data = models.TextField(null=True, blank=True)
-#
-#     class Meta:
-#         abstract = True
-
-
-# class NotificationHistory(AbstractNotificationBase):
-#     id = models.BigAutoField(
-#         verbose_name=_("ID"),
-#         primary_key=True,
-#     )
-#     timestamp = models.DateTimeField(auto_now=True)
-#     users = models.ManyToManyField(
-#         settings.AUTH_USER_MODEL, help_text="Users this notification was sent to"
-#     )
-#
-#     class Meta:
-#         verbose_name_plural = "Notification history"
-
-
-# class NotificationTemplate(AbstractNotificationBase):
-#     history = models.ManyToManyField(NotificationHistory, blank=True)
-#     # Example: notifications/bookings/new_booking
-#     # The we render {template_prefix}_subject
-#     # The we render {template_prefix}_body
-#     # The we render {template_prefix}_body_html
-#     # The we render {template_prefix}_data
-#     # and so on....
-#     # We can fall back to _body if body_html does not exist
-#     # also have email_body_html -> email_body -> body etc
-#     # template will be notificaations/channel/prefix
-#     # notifications/push/base_body.txt
-#     # notifications/push/base_email_subject.txt
-#     # notifications/base_body.html
-#
-#     template_prefix = models.CharField(max_length=255, unique=True)
-#
-#     email_template = "df_notifications/base_email.html"
-#     slack_template = "df_notifications/base_slack.html"
-#
-#     def get_device_queryset(self):
-#         return UserDevice.objects.all()
-#
-#     def send(
-#             self,
-#             users=None,
-#             context=None,
-#             attachments=None,
-#     ):
-#         users = users or []
-#         attachments = attachments or []
-#         """
-#         :param users: users to be notified
-#         :param context: context
-#         :param attachments: attachments for email
-#         :return: history object
-#         """
-#
-#         _context = Context(context)
-#
-#         subject = Template("".join(self.subject.splitlines())).render(_context)
-#
-#         data = json.loads(Template(self.data).render(_context)) if self.data else {}
-#         body = Template(self.body).render(_context)
-#
-#         body_html = Template(
-#             (
-#                 f'{{% extends "{self.email_template}"%}}{{% block body %}}'
-#                 f"{self.body_html}{{% endblock %}}"
-#             )
-#             if self.channel == NotificationChannels.EMAIL
-#             else self.body_html
-#         ).render(_context)
-#
-#         if self.channel == NotificationChannels.EMAIL:
-#             to_emails = [user.email for user in users if user.email]
-#             msg = EmailMultiAlternatives(subject=subject, to=to_emails, body=body)
-#             msg.attach_alternative(body_html, "text/html")
-#             for attachment in attachments:
-#                 msg.attach(**attachment)
-#             msg.send()
-#         elif self.channel == NotificationChannels.PUSH:
-#             devices = self.get_device_queryset().filter(
-#                 user__in=users,
-#             )
-#             devices.send_message(
-#                 Message(
-#                     notification=Notification(
-#                         title=subject,
-#                         body=body,
-#                     ),
-#                     data=data,
-#                 ),
-#             )
-#         elif self.channel == NotificationChannels.SLACK:
-#             slack_message(
-#                 self.slack_template,
-#                 context=context,
-#                 attachments=[{"text": body, "title": subject}],
-#             )
-#         elif self.channel == NotificationChannels.WEBHOOK:
-#             requests.post(subject, data=body, json=data)
-#         elif self.channel == NotificationChannels.CONSOLE:
-#             logging.info(f"Notification: {subject}")
-#         else:
-#             raise NotImplementedError
-#
-#         history = NotificationHistory.objects.create(
-#             channel=self.channel,
-#             data=data,
-#             body=body,
-#             subject=subject,
-#             body_html=body_html,
-#         )
-#         history.users.set(users)
-#         self.history.add(history)
-#         return history
-#
-#     def save(self, *args, **kwargs):
-#         self.data = json.dumps(json.loads(self.data))
-#         super().save(*args, **kwargs)
-#
-#     def send_async(self, users, instance, context=None):
-#         send_notification_async.delay(
-#             self.pk,
-#             [str(user.pk) for user in users],
-#             instance._meta.label_lower,
-#             str(instance.pk),
-#             additional_context=context,
-#         )
-#
-#
-
-
 class UserDevice(AbstractFCMDevice):
     class Meta:
         verbose_name = _("User device")
@@ -195,50 +46,11 @@ class UserDevice(AbstractFCMDevice):
 # -------- Notifications ----------
 
 
-class BaseTransport:
-    key: str
-    template_parts: List[str]
-    title_part: str
-    additional_data: List[str]
-    config_items: List[str]
-
-    def send(self, user: User, data: Dict[str, str], config_items: Dict[str, str]):
-        pass
-
-
-class EmailTransport(BaseTransport):
-    key = "email"
-    template_parts = ["subject", "body", "body_html"]
-    title_part = "subject"
-    additional_data = ["attachments"]
-    config_items = ["recipient"]
-
-    def send(self, user: User, data: Dict[str, Any], config_items: Dict[str, str]):
-        recipient = config_items.get("recipient", user.email)
-        msg = EmailMultiAlternatives(
-            subject=data["subject"], to=[recipient], body=data["body"]
-        )
-        msg.attach_alternative(data["body_html"], "text/html")
-        for attachment in data.get("attachments", []):
-            msg.attach(**attachment)
-        msg.send()
-
-
-class ConsoleTransport(BaseTransport):
-    key = "console"
-    template_parts = ["title", "body"]
-    title_part = "title"
-    additional_data = []
-    config_items = []
-
-    def send(self, user: User, data: Dict[str, Any], config_items: Dict[str, str]):
-        print(f"user: {user}; title: {data['title']}; body: {data['body']}")
-
-
 class NotificationChannel(models.Model):
-    transport_class = models.CharField(
-        max_length=255
-    )  # TODO: get choices from settings
+    transport_class = NoMigrationsChoicesField(
+        max_length=255,
+        choices=[(t, t) for t in settings.DF_NOTIFICATIONS["TRANSPORTS"]],
+    )
 
     def save(self, *args, **kwargs):
         created = self.pk is None
