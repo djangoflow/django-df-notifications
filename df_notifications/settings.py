@@ -6,6 +6,8 @@ DEFAULTS = {
     "TRANSPORTS": [
         "df_notifications.transports.EmailTransport",
         "df_notifications.transports.ConsoleTransport",
+        "df_notifications.transports.FirebasePushTransport",
+        "df_notifications.transports.JSONPostWebhookTransport",
     ],
 }
 

@@ -91,6 +91,8 @@ DF_NOTIFICATIONS = {
     "TRANSPORTS": [
         "df_notifications.transports.EmailTransport",
         "df_notifications.transports.ConsoleTransport",
+        "df_notifications.transports.JSONPostWebhookTransport",
+        "df_notifications.transports.FirebasePushTransport",
         "tests.transports.TestTransport",
     ],
 }

@@ -71,7 +71,20 @@ class NotificationChannel(models.Model):
     def transport(self) -> BaseTransport:
         return import_string(self.transport_class)()
 
+    @functools.cached_property
+    def _first_config_item_value(self):
+        if not self.transport.config_items:
+            return None
+        return [
+            item.value
+            for item in self.items.all()
+            if item.key == self.transport.config_items[0]
+        ][0]
+
     def __str__(self):
+        if self._first_config_item_value:
+            return f"{self.transport.key} {self._first_config_item_value}"
+
         return self.transport.key
 
 
@@ -96,7 +109,7 @@ class NotificationTemplate(models.Model):
 
     @property
     def title(self):
-        return self.parts.get(name=self.channel.transport.title_part).content
+        return self.parts.get(name=self.channel.transport.get_title_part()).content
 
     def send(self, user: User, context: Dict[str, Any], data: Dict[str, Any]):
         rendered_parts = {
@@ -107,7 +120,7 @@ class NotificationTemplate(models.Model):
         notification = NotificationHistory.objects.create(
             user=user,
             template=self,
-            title=rendered_parts[self.channel.transport.title_part],
+            title=rendered_parts[self.channel.transport.get_title_part()],
         )
         for name, content in rendered_parts.items():
             NotificationHistoryPart.objects.create(

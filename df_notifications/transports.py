@@ -1,10 +1,15 @@
 from django.contrib.auth import get_user_model
 from django.core.mail import EmailMultiAlternatives
+from firebase_admin.messaging import Message
+from firebase_admin.messaging import Notification
 from typing import Any
 from typing import Dict
 from typing import List
+from typing import Optional
 
+import json
 import logging
+import requests
 
 
 User = get_user_model()
@@ -13,18 +18,20 @@ User = get_user_model()
 class BaseTransport:
     key: str
     template_parts: List[str]
-    title_part: str
-    additional_data: List[str]
-    config_items: List[str]
+    title_part: Optional[str] = None
+    additional_data: List[str] = []
+    config_items: List[str] = []
 
     def send(self, user: User, data: Dict[str, str], config_items: Dict[str, str]):
         pass
+
+    def get_title_part(self):
+        return self.title_part or self.template_parts[0]
 
 
 class EmailTransport(BaseTransport):
     key = "email"
     template_parts = ["subject", "body", "body_html"]
-    title_part = "subject"
     additional_data = ["attachments"]
     config_items = ["recipient"]
 
@@ -42,9 +49,31 @@ class EmailTransport(BaseTransport):
 class ConsoleTransport(BaseTransport):
     key = "console"
     template_parts = ["title", "body"]
-    title_part = "title"
-    additional_data = []
-    config_items = []
 
     def send(self, user: User, data: Dict[str, Any], config_items: Dict[str, str]):
         logging.info(f"user: {user}; title: {data['title']}; body: {data['body']}")
+
+
+class FirebasePushTransport(BaseTransport):
+    key = "firebase_push"
+    template_parts = ["title", "body", "data"]
+
+    def send(self, user: User, data: Dict[str, str], config_items: Dict[str, str]):
+        user.fcmdevice_set.send_message(
+            Message(
+                notification=Notification(
+                    title=data["title"],
+                    body=data["body"],
+                ),
+                data=json.loads(data["data"]),
+            ),
+        )
+
+
+class JSONPostWebhookTransport(BaseTransport):
+    key = "webhook"
+    template_parts = ["title", "json"]
+    config_items = ["url"]
+
+    def send(self, user: User, data: Dict[str, str], config_items: Dict[str, str]):
+        requests.post(config_items["url"], json=json.loads(data["json"]))

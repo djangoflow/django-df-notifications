@@ -6,6 +6,8 @@ from django.db import models
 from django.db.models import QuerySet
 from typing import Optional
 
+import json
+
 
 class Post(models.Model):
     title = models.CharField(max_length=255)
@@ -14,6 +16,15 @@ class Post(models.Model):
     updated = models.DateTimeField(auto_now=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     is_published = models.BooleanField(default=False)
+
+    def json_data(self):
+        return json.dumps(
+            {
+                "title": self.title,
+                "description": self.description,
+                "is_published": self.is_published,
+            }
+        )
 
 
 @register_action_model
@@ -41,24 +52,3 @@ class PostNotificationReminder(NotificationAsyncReminder):
 
     def get_user(self, instance: Post, prev) -> User:
         return instance.author
-
-
-# @register_notification(model=Post, slugs=["post_created"])
-# def post_created(prev: Post, next: Post, template: NotificationTemplate, **kwargs):
-#     context = {
-#         "prev": prev,
-#         "instance": next,
-#     }
-#     if prev is None:
-#         template.send(users=list(User.objects.all()), context=context)
-#
-#
-# @register_notification(model=Post, slugs=["post_published"])
-# def post_published_async(
-#     prev: Post, next: Post, template: NotificationTemplate, **kwargs
-# ):
-#     context = {"prev_title": prev.title}
-#     if not (prev and prev.is_published) and next.is_published:
-#         template.send_async(
-#             users=list(User.objects.all()), instance=next, context=context
-#         )
