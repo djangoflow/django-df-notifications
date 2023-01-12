@@ -2,7 +2,7 @@ from dbtemplates.models import Template
 from df_notifications.models import NotificationHistory
 from django.contrib.auth import get_user_model
 from tests.test_app.models import Post
-from tests.test_app.models import PostNotificationAction
+from tests.test_app.models import PostNotificationRule
 
 import pytest
 
@@ -13,7 +13,7 @@ pytestmark = [pytest.mark.django_db]
 
 
 def setup_published_notification():
-    action = PostNotificationAction(
+    action = PostNotificationRule(
         is_published_next=True,
         is_published_prev=False,
         channel="console",

@@ -109,16 +109,14 @@ class NotificationMixin(models.Model):
 # ----------- Actions -------------
 
 
-class BaseModelAction(GenericBase[M], models.Model):
+class BaseModelRule(GenericBase[M], models.Model):
     model: Type[M]
 
     @classmethod
-    def get_queryset(
-        cls, instance: M, prev: Optional[M]
-    ) -> QuerySet["BaseModelAction"]:
+    def get_queryset(cls, instance: M, prev: Optional[M]) -> QuerySet["BaseModelRule"]:
         return cls.objects.all()
 
-    def condition(self, instance: M, prev: Optional[M]) -> bool:
+    def check_condition(self, instance: M, prev: Optional[M]) -> bool:
         return True
 
     def perform_action(self, instance: M):
@@ -128,7 +126,7 @@ class BaseModelAction(GenericBase[M], models.Model):
     def invoke(cls, instance: M):
         prev_instance = getattr(instance, "_pre_save_instance", None)
         for action in cls.get_queryset(instance, prev_instance):
-            if action.condition(instance, prev_instance):
+            if action.check_condition(instance, prev_instance):
                 action.perform_action(instance)
 
     class Meta:
@@ -146,7 +144,7 @@ class BaseModelReminder(GenericBase[M], models.Model):
     def get_model_queryset(self) -> QuerySet[M]:
         return self.model_queryset or self.model.objects.all()
 
-    def condition(self, instance: M) -> bool:
+    def check_condition(self, instance: M) -> bool:
         return True
 
     def perform_action(self, instance: M):
@@ -156,7 +154,7 @@ class BaseModelReminder(GenericBase[M], models.Model):
     def invoke(cls):
         for reminder in cls.get_queryset():
             for instance in reminder.get_model_queryset():
-                if reminder.condition(instance):
+                if reminder.check_condition(instance):
                     reminder.perform_action(instance)
 
     class Meta:
@@ -199,7 +197,7 @@ class AsyncNotificationModelMixin(NotificationModelMixin):
         abstract = True
 
 
-class NotificationModelAction(NotificationModelMixin, BaseModelAction):
+class NotificationModelRule(NotificationModelMixin, BaseModelRule):
     def perform_action(self, instance: M):
         self.send(instance)
 
@@ -215,9 +213,7 @@ class NotificationModelReminder(NotificationModelMixin, BaseModelReminder):
         abstract = True
 
 
-class NotificationModelAsyncAction(
-    AsyncNotificationModelMixin, NotificationModelAction
-):
+class NotificationModelAsyncRule(AsyncNotificationModelMixin, NotificationModelRule):
     class Meta:
         abstract = True
 

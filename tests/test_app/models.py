@@ -1,6 +1,6 @@
-from df_notifications.decorators import register_action_model
-from df_notifications.models import NotificationModelAction
+from df_notifications.decorators import register_rule_model
 from df_notifications.models import NotificationModelAsyncReminder
+from df_notifications.models import NotificationModelRule
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import QuerySet
@@ -28,8 +28,8 @@ class Post(models.Model):
         )
 
 
-@register_action_model
-class PostNotificationAction(NotificationModelAction):
+@register_rule_model
+class PostNotificationRule(NotificationModelRule):
     model = Post
 
     is_published_prev = models.BooleanField(default=False)
@@ -41,7 +41,7 @@ class PostNotificationAction(NotificationModelAction):
     @classmethod
     def get_queryset(
         cls, instance: Post, prev: Optional[Post]
-    ) -> QuerySet["PostNotificationAction"]:
+    ) -> QuerySet["PostNotificationRule"]:
         return cls.objects.filter(
             is_published_prev=prev.is_published if prev else False,
             is_published_next=instance.is_published,

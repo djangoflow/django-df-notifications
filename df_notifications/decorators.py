@@ -9,7 +9,7 @@ def save_previous_instance(sender, instance, **kwargs):
         instance._pre_save_instance = None
 
 
-def register_action_model(action_class):
+def register_rule_model(action_class):
     pre_save.connect(
         save_previous_instance,
         action_class.model,

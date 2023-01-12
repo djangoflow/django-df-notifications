@@ -7,7 +7,7 @@ from typing import Type
 
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):
-    sender.add_periodic_task(1, register_reminders.s())
+    sender.add_periodic_task(60, register_reminders.s())
 
 
 @app.task()
