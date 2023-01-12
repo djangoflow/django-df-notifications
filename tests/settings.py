@@ -88,11 +88,12 @@ CELERY_TASK_EAGER_PROPAGATES = True
 
 
 DF_NOTIFICATIONS = {
-    "TRANSPORTS": [
-        "df_notifications.transports.EmailTransport",
-        "df_notifications.transports.ConsoleTransport",
-        "df_notifications.transports.JSONPostWebhookTransport",
-        "df_notifications.transports.FirebasePushTransport",
-        "tests.transports.TestTransport",
-    ],
+    "CHANNELS": {
+        "email": "df_notifications.channels.EmailChannel",
+        "console": "df_notifications.channels.ConsoleChannel",
+        "push": "df_notifications.channels.FirebasePushChannel",
+        "webhook": "df_notifications.channels.JSONPostWebhookChannel",
+        "test": "tests.channels.TestChannel",
+    },
+    "SAVE_HISTORY_CONTENT": True,
 }

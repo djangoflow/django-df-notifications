@@ -1,9 +1,10 @@
 from df_notifications.decorators import register_action_model
-from df_notifications.models import NotificationAction
-from df_notifications.models import NotificationAsyncReminder
+from df_notifications.models import NotificationModelAction
+from df_notifications.models import NotificationModelAsyncReminder
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import QuerySet
+from typing import List
 from typing import Optional
 
 import json
@@ -28,14 +29,14 @@ class Post(models.Model):
 
 
 @register_action_model
-class PostNotificationAction(NotificationAction):
+class PostNotificationAction(NotificationModelAction):
     model = Post
 
     is_published_prev = models.BooleanField(default=False)
     is_published_next = models.BooleanField(default=True)
 
-    def get_user(self, instance: Post, prev) -> User:
-        return instance.author
+    def get_users(self, instance: Post) -> List[User]:
+        return [instance.author]
 
     @classmethod
     def get_queryset(
@@ -47,8 +48,8 @@ class PostNotificationAction(NotificationAction):
         )
 
 
-class PostNotificationReminder(NotificationAsyncReminder):
+class PostNotificationReminder(NotificationModelAsyncReminder):
     model = Post
 
-    def get_user(self, instance: Post, prev) -> User:
-        return instance.author
+    def get_users(self, instance: Post) -> List[User]:
+        return [instance.author]

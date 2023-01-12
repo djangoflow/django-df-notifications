@@ -1,6 +1,5 @@
-from df_notifications.models import NotificationChannel
+from dbtemplates.models import Template
 from df_notifications.models import NotificationHistory
-from df_notifications.models import NotificationTemplate
 from django.contrib.auth import get_user_model
 from tests.test_app.models import Post
 from tests.test_app.models import PostNotificationAction
@@ -14,21 +13,21 @@ pytestmark = [pytest.mark.django_db]
 
 
 def setup_published_notification():
-    channel = NotificationChannel.objects.create(
-        transport_class="df_notifications.transports.ConsoleTransport"
-    )
-    template = NotificationTemplate.objects.create(
-        channel=channel,
-        name="post_published_console",
-    )
-    PostNotificationAction.objects.create(
-        is_published_prev=False,
+    action = PostNotificationAction(
         is_published_next=True,
-        template=template,
+        is_published_prev=False,
+        channel="console",
+        template_prefix="df_notifications/posts/published",
     )
-    title_part = template.parts.get(name="title")
-    title_part.content = "New post: {{ instance.title }}"
-    title_part.save()
+    action.save()
+    Template.objects.create(
+        name=f"{action.template_prefix}_title.txt",
+        content="New post: {{ instance.title }}",
+    )
+    Template.objects.create(
+        name=f"{action.template_prefix}_console_body.txt",
+        content="{{ instance.description }}",
+    )
 
 
 def test_post_published_notification_created():
@@ -43,8 +42,11 @@ def test_post_published_notification_created():
         is_published=True,
         author=user,
     )
-    notification = NotificationHistory.objects.get(user=user)
-    assert notification.title == f"New post: {post.title}"
+    notifications = NotificationHistory.objects.all()
+    assert len(notifications) == 1
+    notification = notifications[0]
+    assert notification.content["title.txt"] == f"New post: {post.title}"
+    assert notification.content["body.txt"] == post.description
 
 
 def test_post_non_published_notification_not_created():
@@ -59,4 +61,4 @@ def test_post_non_published_notification_not_created():
         is_published=False,
         author=user,
     )
-    assert not NotificationHistory.objects.filter(user=user).exists()
+    assert not NotificationHistory.objects.exists()

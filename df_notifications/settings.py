@@ -3,12 +3,13 @@ from rest_framework.settings import APISettings
 
 
 DEFAULTS = {
-    "TRANSPORTS": [
-        "df_notifications.transports.EmailTransport",
-        "df_notifications.transports.ConsoleTransport",
-        "df_notifications.transports.FirebasePushTransport",
-        "df_notifications.transports.JSONPostWebhookTransport",
-    ],
+    "CHANNELS": {
+        "email": "df_notifications.channels.EmailChannel",
+        "console": "df_notifications.channels.ConsoleChannel",
+        "push": "df_notifications.channels.FirebasePushChannel",
+        "webhook": "df_notifications.channels.JSONPostWebhookChannel",
+    },
+    "SAVE_HISTORY_CONTENT": True,
 }
 
 IMPORT_STRINGS = []

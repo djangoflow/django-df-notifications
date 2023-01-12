@@ -14,9 +14,17 @@ class PostAdmin(admin.ModelAdmin):
 
 @admin.register(PostNotificationAction)
 class PostNotificationActionAdmin(admin.ModelAdmin):
-    list_display = ("template", "is_published_prev", "is_published_next")
+    list_display = (
+        "template_prefix",
+        "channel",
+        "is_published_prev",
+        "is_published_next",
+    )
 
 
 @admin.register(PostNotificationReminder)
 class PostNotificationReminderAdmin(admin.ModelAdmin):
-    list_display = ("template",)
+    list_display = (
+        "template_prefix",
+        "channel",
+    )
