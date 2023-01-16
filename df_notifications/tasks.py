@@ -2,12 +2,15 @@ from celery import current_app as app
 from df_notifications.models import BaseModelReminder
 from df_notifications.models import NotificationModelMixin
 from django.apps import apps
+from django.conf import settings
 from typing import Type
 
 
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):
-    sender.add_periodic_task(60, register_reminders.s())
+    sender.add_periodic_task(
+        settings.DF_NOTIFICATIONS["REMINDERS_CHECK_PERIOD"], register_reminders.s()
+    )
 
 
 @app.task()

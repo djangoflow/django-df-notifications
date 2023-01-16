@@ -1,5 +1,6 @@
 from df_notifications.decorators import register_rule_model
-from df_notifications.models import NotificationModelAsyncReminder
+from df_notifications.models import NotifiableModelMixin
+from df_notifications.models import NotificationModelReminder
 from df_notifications.models import NotificationModelRule
 from django.contrib.auth.models import User
 from django.db import models
@@ -10,7 +11,7 @@ from typing import Optional
 import json
 
 
-class Post(models.Model):
+class Post(NotifiableModelMixin):
     title = models.CharField(max_length=255)
     description = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
@@ -48,8 +49,11 @@ class PostNotificationRule(NotificationModelRule):
         )
 
 
-class PostNotificationReminder(NotificationModelAsyncReminder):
+class PostNotificationReminder(NotificationModelReminder):
+    MODIFIED_MODEL_FIELD = "updated"
     model = Post
+
+    is_published = models.BooleanField(default=True)
 
     def get_users(self, instance: Post) -> List[User]:
         return [instance.author]

@@ -1,11 +1,18 @@
+from datetime import timedelta
 from df_notifications.channels import BaseChannel
 from df_notifications.fields import NoMigrationsChoicesField
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db import transaction
+from django.db.models import Count
+from django.db.models import Q
 from django.db.models import QuerySet
 from django.template.loader import render_to_string
+from django.utils import timezone
 from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
 from fcm_django.models import AbstractFCMDevice
@@ -47,6 +54,14 @@ class UserDevice(AbstractFCMDevice):
 # -------- Notifications ----------
 
 
+class NotificationHistoryQuerySet(models.QuerySet):
+    def for_instance(self, instance: M):
+        return self.filter(
+            instance_id=instance.pk,
+            content_type=ContentType.objects.get_for_model(instance).id,
+        )
+
+
 class NotificationHistory(models.Model):
     users = models.ManyToManyField(User, blank=True)
     created = models.DateTimeField(auto_now_add=True, db_index=True)
@@ -57,13 +72,29 @@ class NotificationHistory(models.Model):
     template_prefix = models.CharField(max_length=255)
     content = models.JSONField(default=dict, blank=True)
 
+    content_type = models.ForeignKey(
+        ContentType, on_delete=models.CASCADE, null=True, blank=True
+    )
+    instance_id = models.PositiveBigIntegerField(null=True, blank=True)
+    instance = GenericForeignKey("content_type", "instance_id")
+
+    objects = NotificationHistoryQuerySet.as_manager()
+
     class Meta:
         verbose_name_plural = "Notification history"
 
         indexes = [
             models.Index(fields=["template_prefix", "created"]),
             models.Index(fields=["channel", "created"]),
+            models.Index(fields=["content_type", "instance_id", "created"]),
         ]
+
+
+class NotifiableModelMixin(models.Model):
+    notifications = GenericRelation(NotificationHistory, "instance_id")
+
+    class Meta:
+        abstract = True
 
 
 class NotificationMixin(models.Model):
@@ -94,6 +125,7 @@ class NotificationMixin(models.Model):
             channel=self.channel,
             template_prefix=self.template_prefix,
             content=parts if settings.DF_NOTIFICATIONS["SAVE_HISTORY_CONTENT"] else "",
+            instance=context.get("instance"),
         )
         notification.users.set(users)
         self.history.add(notification)
@@ -135,14 +167,13 @@ class BaseModelRule(GenericBase[M], models.Model):
 
 class BaseModelReminder(GenericBase[M], models.Model):
     model: Type[M]
-    model_queryset: Optional[QuerySet[M]] = None
 
     @classmethod
     def get_queryset(cls) -> QuerySet["BaseModelReminder"]:
         return cls.objects.all()
 
     def get_model_queryset(self) -> QuerySet[M]:
-        return self.model_queryset or self.model.objects.all()
+        return self.model.objects.all()
 
     def check_condition(self, instance: M) -> bool:
         return True
@@ -206,6 +237,39 @@ class NotificationModelRule(NotificationModelMixin, BaseModelRule):
 
 
 class NotificationModelReminder(NotificationModelMixin, BaseModelReminder):
+    MODIFIED_MODEL_FIELD = "modified"
+
+    delay = models.DurationField(
+        help_text="Send the reminder after this period of time",
+        default=timedelta(seconds=0),
+    )
+    cooldown = models.DurationField(
+        help_text="Wait so much time before reminding again",
+        default=timedelta(hours=1),
+    )
+    repeat = models.SmallIntegerField(
+        help_text="Repeat the reminder this many times", default=1
+    )
+
+    def get_model_queryset(self) -> QuerySet[M]:
+        return (
+            super(NotificationModelReminder, self)
+            .get_model_queryset()
+            .filter(**{f"{self.MODIFIED_MODEL_FIELD}__lt": timezone.now() - self.delay})
+            .annotate(
+                notification_count=Count(
+                    "notifications__id",
+                    filter=Q(notifications__in=self.history.all()),
+                ),
+            )
+            .filter(Q(notification_count__lt=self.repeat))
+            .exclude(
+                Q(notifications__in=self.history.all())
+                & Q(notifications__created__gt=(timezone.now() - self.cooldown))
+            )
+            .distinct()
+        )
+
     def perform_action(self, instance: M):
         self.send(instance)
 

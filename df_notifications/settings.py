@@ -10,6 +10,7 @@ DEFAULTS = {
         "webhook": "df_notifications.channels.JSONPostWebhookChannel",
     },
     "SAVE_HISTORY_CONTENT": True,
+    "REMINDERS_CHECK_PERIOD": 60,
 }
 
 IMPORT_STRINGS = []

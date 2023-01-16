@@ -96,4 +96,5 @@ DF_NOTIFICATIONS = {
         "test": "tests.channels.TestChannel",
     },
     "SAVE_HISTORY_CONTENT": True,
+    "REMINDERS_CHECK_PERIOD": 5,
 }
