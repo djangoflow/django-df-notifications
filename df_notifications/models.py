@@ -98,7 +98,7 @@ class NotifiableModelMixin(models.Model):
 
 
 class NotificationMixin(models.Model):
-    history = models.ManyToManyField(NotificationHistory, blank=True)
+    history = models.ManyToManyField(NotificationHistory, blank=True, editable=False)
     channel = NoMigrationsChoicesField(
         max_length=255,
         choices=[(key, key) for key in settings.DF_NOTIFICATIONS["CHANNELS"]],

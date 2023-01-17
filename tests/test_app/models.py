@@ -1,3 +1,4 @@
+from df_notifications.decorators import register_reminder_model
 from df_notifications.decorators import register_rule_model
 from df_notifications.models import NotifiableModelMixin
 from df_notifications.models import NotificationModelReminder
@@ -32,6 +33,10 @@ class Post(NotifiableModelMixin):
 @register_rule_model
 class PostNotificationRule(NotificationModelRule):
     model = Post
+    admin_list_display = [
+        "is_published_prev",
+        "is_published_next",
+    ]
 
     is_published_prev = models.BooleanField(default=False)
     is_published_next = models.BooleanField(default=True)
@@ -49,9 +54,13 @@ class PostNotificationRule(NotificationModelRule):
         )
 
 
+@register_reminder_model
 class PostNotificationReminder(NotificationModelReminder):
     MODIFIED_MODEL_FIELD = "updated"
     model = Post
+    admin_list_display = [
+        "is_published",
+    ]
 
     is_published = models.BooleanField(default=True)
 
