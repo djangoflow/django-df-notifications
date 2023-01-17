@@ -34,6 +34,8 @@ class Post(NotifiableModelMixin):
 class PostNotificationRule(NotificationModelRule):
     model = Post
     admin_list_display = [
+        "template_prefix",
+        "channel",
         "is_published_prev",
         "is_published_next",
     ]
@@ -59,7 +61,13 @@ class PostNotificationReminder(NotificationModelReminder):
     MODIFIED_MODEL_FIELD = "updated"
     model = Post
     admin_list_display = [
+        "template_prefix",
+        "channel",
+        "delay",
+        "cooldown",
+        "repeat",
         "is_published",
+        "action",
     ]
 
     is_published = models.BooleanField(default=True)

@@ -220,3 +220,26 @@ def test_send_notification_async_without_model():
     notification = notifications[0]
     assert notification.content["title.txt"] == "New post: title 123"
     assert notification.content["body.txt"] == "description 456"
+
+
+def test_reminder_performs_action():
+    reminder = PostNotificationReminder(
+        is_published=True,
+        channel="console",
+        template_prefix="df_notifications/posts/published",
+        action="instance.title='new title'; instance.save()",
+    )
+    reminder.save()
+
+    user = User.objects.create(
+        email="test@test.com",
+    )
+    post = Post.objects.create(
+        title="Title 1",
+        description="Content 1",
+        is_published=True,
+        author=user,
+    )
+    PostNotificationReminder.invoke()
+    post.refresh_from_db()
+    assert post.title == "new title"

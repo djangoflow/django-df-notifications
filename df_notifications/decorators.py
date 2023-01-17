@@ -27,11 +27,7 @@ def register_notification_model_admin(model_class):
     @admin.register(ProxyModel)
     class AdminProxyModel(admin.ModelAdmin):
         def get_list_display(self, request):
-            return (
-                "template_prefix",
-                "channel",
-                *model_class.admin_list_display,
-            )
+            return model_class.admin_list_display
 
 
 def register_rule_model(rule_class):

@@ -219,6 +219,11 @@ class NotificationModelReminder(NotificationModelMixin, BaseModelReminder):
     repeat = models.SmallIntegerField(
         help_text="Repeat the reminder this many times", default=1
     )
+    action = models.TextField(
+        help_text="Python code to execute. You can use "
+        "`instance` variable to access current model",
+        default="",
+    )
 
     def get_model_queryset(self) -> QuerySet[M]:
         return (
@@ -241,6 +246,8 @@ class NotificationModelReminder(NotificationModelMixin, BaseModelReminder):
 
     def perform_action(self, instance: M):
         self.send(instance)
+        if self.action:
+            exec(self.action)
 
     class Meta:
         abstract = True
