@@ -1,5 +1,4 @@
 from datetime import timedelta
-from df_notifications.channels import BaseChannel
 from df_notifications.fields import NoMigrationsChoicesField
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -11,9 +10,7 @@ from django.db import transaction
 from django.db.models import Count
 from django.db.models import Q
 from django.db.models import QuerySet
-from django.template.loader import render_to_string
 from django.utils import timezone
-from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
 from fcm_django.models import AbstractFCMDevice
 from typing import Any
@@ -24,8 +21,6 @@ from typing import Optional
 from typing import Type
 from typing import TYPE_CHECKING
 from typing import TypeVar
-
-import functools
 
 
 M = TypeVar("M", bound=models.Model)
@@ -97,47 +92,6 @@ class NotifiableModelMixin(models.Model):
         abstract = True
 
 
-class NotificationMixin(models.Model):
-    history = models.ManyToManyField(NotificationHistory, blank=True, editable=False)
-    channel = NoMigrationsChoicesField(
-        max_length=255,
-        choices=[(key, key) for key in settings.DF_NOTIFICATIONS["CHANNELS"]],
-    )
-    template_prefix = models.CharField(max_length=255)
-
-    def render_parts(self, context: Dict[str, Any]):
-        return {
-            part: render_to_string(
-                [
-                    f"{self.template_prefix}_{self.channel}_{part}",
-                    f"{self.template_prefix}_{part}",
-                ],
-                context=context,
-            )
-            for part in self.channel_instance.template_parts
-        }
-
-    def send_notification(self, users: List[User], context: Dict[str, Any]):
-        parts = self.render_parts(context)
-        self.channel_instance.send(users, {**context, **parts})
-
-        notification = NotificationHistory.objects.create(
-            channel=self.channel,
-            template_prefix=self.template_prefix,
-            content=parts if settings.DF_NOTIFICATIONS["SAVE_HISTORY_CONTENT"] else "",
-            instance=context.get("instance"),
-        )
-        notification.users.set(users)
-        self.history.add(notification)
-
-    @functools.cached_property
-    def channel_instance(self) -> BaseChannel:
-        return import_string(settings.DF_NOTIFICATIONS["CHANNELS"][self.channel])()
-
-    class Meta:
-        abstract = True
-
-
 # ----------- Actions -------------
 
 
@@ -192,8 +146,15 @@ class BaseModelReminder(GenericBase[M], models.Model):
         abstract = True
 
 
-class NotificationModelMixin(NotificationMixin):
+class NotificationModelMixin(models.Model):
     model: Type[M]
+
+    history = models.ManyToManyField(NotificationHistory, blank=True, editable=False)
+    channel = NoMigrationsChoicesField(
+        max_length=255,
+        choices=[(key, key) for key in settings.DF_NOTIFICATIONS["CHANNELS"]],
+    )
+    template_prefix = models.CharField(max_length=255)
     context = models.JSONField(default=dict, blank=True)
 
     def get_users(self, instance: M) -> List[User]:
@@ -206,7 +167,15 @@ class NotificationModelMixin(NotificationMixin):
         }
 
     def send(self, instance: M):
-        self.send_notification(self.get_users(instance), self.get_context(instance))
+        from .utils import send_notification
+
+        notification = send_notification(
+            self.get_users(instance),
+            self.channel,
+            self.template_prefix,
+            self.get_context(instance),
+        )
+        self.history.add(notification)
 
     class Meta:
         abstract = True

@@ -1,5 +1,7 @@
 from dbtemplates.models import Template
 from df_notifications.models import NotificationHistory
+from df_notifications.tasks import send_notification_async
+from df_notifications.utils import send_notification
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from tests.test_app.models import Post
@@ -165,3 +167,56 @@ def test_reminder_performs_retries():
     assert post.notifications.count() == 2
     PostNotificationReminder.invoke()
     assert post.notifications.count() == 2
+
+
+def test_send_notification_without_model():
+    user = User.objects.create(
+        email="test@test.com",
+    )
+    Template.objects.create(
+        name=f"notifications_title.txt",
+        content="New post: {{ title }}",
+    )
+    Template.objects.create(
+        name=f"notifications_console_body.txt",
+        content="{{ description }}",
+    )
+    notification = send_notification(
+        users=[user],
+        channel_name="console",
+        template_prefix="notifications",
+        context={
+            "title": "title 123",
+            "description": "description 456",
+        },
+    )
+    assert notification.content["title.txt"] == "New post: title 123"
+    assert notification.content["body.txt"] == "description 456"
+
+
+def test_send_notification_async_without_model():
+    user = User.objects.create(
+        email="test@test.com",
+    )
+    Template.objects.create(
+        name=f"notifications_title.txt",
+        content="New post: {{ title }}",
+    )
+    Template.objects.create(
+        name=f"notifications_console_body.txt",
+        content="{{ description }}",
+    )
+    send_notification_async(
+        [user.id],
+        "console",
+        "notifications",
+        {
+            "title": "title 123",
+            "description": "description 456",
+        },
+    )
+    notifications = NotificationHistory.objects.all()
+    assert len(notifications) == 1
+    notification = notifications[0]
+    assert notification.content["title.txt"] == "New post: title 123"
+    assert notification.content["body.txt"] == "description 456"

@@ -16,7 +16,7 @@ def create_proxy_model(model_class):
         (model_class,),
         {
             "__module__": "df_notifications",
-            "Meta": type("Meta", (object,), {"proxy": True}),
+            "Meta": type("Meta", (object,), {"proxy": True, "auto_created": True}),
         },
     )
 
@@ -54,3 +54,4 @@ def register_rule_model(rule_class):
 
 def register_reminder_model(reminder_class):
     register_notification_model_admin(reminder_class)
+    return reminder_class

@@ -1,6 +1,8 @@
 from celery import current_app as app
 from df_notifications.models import BaseModelReminder
 from df_notifications.models import NotificationModelMixin
+from df_notifications.models import User
+from df_notifications.utils import send_notification
 from django.apps import apps
 from django.conf import settings
 from typing import Type
@@ -27,6 +29,10 @@ def send_model_notification_async(model_notification_class, notification_pk, mod
     )
     notification = ModelNotification.objects.get(pk=notification_pk)
     instance = ModelNotification.model.objects.get(pk=model_pk)
-    notification.send_notification(
-        notification.get_users(instance), notification.get_context(instance)
-    )
+    NotificationModelMixin.send(notification, instance)
+
+
+@app.task
+def send_notification_async(user_ids, channel_name, template_prefix, context):
+    users = User.objects.filter(id__in=user_ids)
+    send_notification(users, channel_name, template_prefix, context)
