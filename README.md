@@ -54,6 +54,15 @@ Views and templates
 ...
 
 
+Development
+-------------------
+
+Running tests
+
+```
+make test
+```
+
 
 Other modules and links out there
 ---------------------------------

@@ -1,33 +1,76 @@
-from df_notifications.decorators import register_notification
-from df_notifications.models import NotificationTemplate
+from df_notifications.decorators import register_reminder_model
+from df_notifications.decorators import register_rule_model
+from df_notifications.models import NotifiableModelMixin
+from df_notifications.models import NotificationModelReminder
+from df_notifications.models import NotificationModelRule
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models import QuerySet
+from typing import List
+from typing import Optional
+
+import json
 
 
-class Post(models.Model):
+class Post(NotifiableModelMixin):
     title = models.CharField(max_length=255)
     description = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
     is_published = models.BooleanField(default=False)
 
-
-@register_notification(model=Post, slugs=["post_created"])
-def post_created(prev: Post, next: Post, template: NotificationTemplate, **kwargs):
-    context = {
-        "prev": prev,
-        "instance": next,
-    }
-    if prev is None:
-        template.send(users=list(User.objects.all()), context=context)
-
-
-@register_notification(model=Post, slugs=["post_published"])
-def post_published_async(
-    prev: Post, next: Post, template: NotificationTemplate, **kwargs
-):
-    context = {"prev_title": prev.title}
-    if not (prev and prev.is_published) and next.is_published:
-        template.send_async(
-            users=list(User.objects.all()), instance=next, context=context
+    def json_data(self):
+        return json.dumps(
+            {
+                "title": self.title,
+                "description": self.description,
+                "is_published": self.is_published,
+            }
         )
+
+
+@register_rule_model
+class PostNotificationRule(NotificationModelRule):
+    model = Post
+    admin_list_display = [
+        "template_prefix",
+        "channel",
+        "is_published_prev",
+        "is_published_next",
+    ]
+
+    is_published_prev = models.BooleanField(default=False)
+    is_published_next = models.BooleanField(default=True)
+
+    def get_users(self, instance: Post) -> List[User]:
+        return [instance.author]
+
+    @classmethod
+    def get_queryset(
+        cls, instance: Post, prev: Optional[Post]
+    ) -> QuerySet["PostNotificationRule"]:
+        return cls.objects.filter(
+            is_published_prev=prev.is_published if prev else False,
+            is_published_next=instance.is_published,
+        )
+
+
+@register_reminder_model
+class PostNotificationReminder(NotificationModelReminder):
+    MODIFIED_MODEL_FIELD = "updated"
+    model = Post
+    admin_list_display = [
+        "template_prefix",
+        "channel",
+        "delay",
+        "cooldown",
+        "repeat",
+        "is_published",
+        "action",
+    ]
+
+    is_published = models.BooleanField(default=True)
+
+    def get_users(self, instance: Post) -> List[User]:
+        return [instance.author]

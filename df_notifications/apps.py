@@ -3,7 +3,6 @@ from django.utils.translation import gettext_lazy as _
 
 
 class DFNotificationsConfig(AppConfig):
-    api_path = "notifications/"
     name = "df_notifications"
     verbose_name = _("DjangoFlow Notifications")
 
@@ -12,3 +11,11 @@ class DFNotificationsConfig(AppConfig):
             import df_notifications.signals  # noqa F401
         except ImportError:
             pass
+
+    class Djangoflow:
+        required_apps = [
+            "df_notifications",
+            "fcm_django",
+            "django_slack",
+        ]
+        api_path = "notifications/"

@@ -1,8 +1,6 @@
-from df_notifications.models import NotificationTemplate
+from django.contrib import admin
 from django.db.models.signals import post_save
 from django.db.models.signals import pre_save
-
-import functools
 
 
 def save_previous_instance(sender, instance, **kwargs):
@@ -12,22 +10,44 @@ def save_previous_instance(sender, instance, **kwargs):
         instance._pre_save_instance = None
 
 
-def register_notification(model, slugs):
-    def decorator(func):
-        templates = NotificationTemplate.objects.filter(slug__in=slugs)
+def create_proxy_model(model_class):
+    return type(
+        model_class.__name__,
+        (model_class,),
+        {
+            "__module__": "df_notifications",
+            "Meta": type("Meta", (object,), {"proxy": True, "auto_created": True}),
+        },
+    )
 
-        pre_save.connect(save_previous_instance, model, weak=False)
 
-        @functools.wraps(func)
-        def wrapper(sender, instance, **kwargs):
-            for template in templates:
-                func(
-                    prev=instance._pre_save_instance,
-                    next=instance,
-                    template=template,
-                    **kwargs
-                )
+def register_notification_model_admin(model_class):
+    ProxyModel = create_proxy_model(model_class)
 
-        post_save.connect(wrapper, model, weak=False)
+    @admin.register(ProxyModel)
+    class AdminProxyModel(admin.ModelAdmin):
+        def get_list_display(self, request):
+            return model_class.admin_list_display
 
-    return decorator
+
+def register_rule_model(rule_class):
+    pre_save.connect(
+        save_previous_instance,
+        rule_class.model,
+        weak=False,
+        dispatch_uid="save_previous_instance",
+    )
+
+    def apply_action(sender, instance, **kwargs):
+        rule_class.invoke(instance)
+
+    post_save.connect(apply_action, rule_class.model, weak=False)
+
+    register_notification_model_admin(rule_class)
+
+    return rule_class
+
+
+def register_reminder_model(reminder_class):
+    register_notification_model_admin(reminder_class)
+    return reminder_class

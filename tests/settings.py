@@ -10,6 +10,7 @@ INSTALLED_APPS = [
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
+    "django.contrib.sites",
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
@@ -18,6 +19,8 @@ INSTALLED_APPS = [
     "django_slack",
     "import_export",
     "tests.test_app.apps.TestAppConfig",
+    "dbtemplates",
+    "django_celery_beat",
 ]
 
 MIDDLEWARE = [
@@ -34,7 +37,6 @@ TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [],
-        "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.debug",
@@ -42,9 +44,16 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
             ],
+            "loaders": [
+                "django.template.loaders.filesystem.Loader",
+                "django.template.loaders.app_directories.Loader",
+                "dbtemplates.loader.Loader",
+            ],
         },
     },
 ]
+
+SITE_ID = 1
 
 DATABASES = {
     "default": {
@@ -71,6 +80,21 @@ STATIC_URL = "/static/"
 
 ALLOWED_HOSTS = ["*"]
 
-CELERY_BROKER_URL = "redis://127.0.0.1:6379/1"
-# http://docs.celeryproject.org/en/latest/userguide/configuration.html#std:setting-result_backend
-CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+CELERY_BROKER_URL = "memory://"
+CELERY_RESULT_BACKEND = "cache+memory://"
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+CELERY_TASK_ALWAYS_EAGER = True
+CELERY_TASK_EAGER_PROPAGATES = True
+
+
+DF_NOTIFICATIONS = {
+    "CHANNELS": {
+        "email": "df_notifications.channels.EmailChannel",
+        "console": "df_notifications.channels.ConsoleChannel",
+        "push": "df_notifications.channels.FirebasePushChannel",
+        "webhook": "df_notifications.channels.JSONPostWebhookChannel",
+        "test": "tests.channels.TestChannel",
+    },
+    "SAVE_HISTORY_CONTENT": True,
+    "REMINDERS_CHECK_PERIOD": 5,
+}
