@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.db.models.signals import post_save
 from django.db.models.signals import pre_save
+from import_export.admin import ImportExportMixin
+from import_export.resources import ModelResource
 
 
 def save_previous_instance(sender, instance, **kwargs):
@@ -25,9 +27,18 @@ def register_notification_model_admin(model_class):
     ProxyModel = create_proxy_model(model_class)
 
     @admin.register(ProxyModel)
-    class AdminProxyModel(admin.ModelAdmin):
+    class AdminProxyModel(ImportExportMixin, admin.ModelAdmin):
         def get_list_display(self, request):
             return model_class.admin_list_display
+
+        def get_resource_classes(self):
+            class ProxyModelResource(ModelResource):
+                class Meta:
+                    model = model_class
+                    skip_unchanged = True
+                    report_skipped = False
+
+            return [ProxyModelResource]
 
 
 def register_rule_model(rule_class):

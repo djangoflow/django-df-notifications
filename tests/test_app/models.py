@@ -5,6 +5,7 @@ from df_notifications.models import NotificationModelReminder
 from df_notifications.models import NotificationModelRule
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models import Q
 from django.db.models import QuerySet
 from typing import List
 from typing import Optional
@@ -39,8 +40,9 @@ class PostNotificationRule(NotificationModelRule):
         "is_published_prev",
         "is_published_next",
     ]
+    tracking_fields = ["is_published"]
 
-    is_published_prev = models.BooleanField(default=False)
+    is_published_prev = models.BooleanField(default=False, null=True)
     is_published_next = models.BooleanField(default=True)
 
     def get_users(self, instance: Post) -> List[User]:
@@ -50,10 +52,17 @@ class PostNotificationRule(NotificationModelRule):
     def get_queryset(
         cls, instance: Post, prev: Optional[Post]
     ) -> QuerySet["PostNotificationRule"]:
-        return cls.objects.filter(
-            is_published_prev=prev.is_published if prev else False,
+        qs = cls.objects.filter(
             is_published_next=instance.is_published,
         )
+
+        if prev:
+            qs = qs.filter(
+                Q(is_published_prev__isnull=True)
+                | Q(is_published_prev=prev.is_published),
+            )
+
+        return qs
 
 
 @register_reminder_model

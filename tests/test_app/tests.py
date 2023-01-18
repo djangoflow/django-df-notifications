@@ -243,3 +243,41 @@ def test_reminder_performs_action():
     PostNotificationReminder.invoke()
     post.refresh_from_db()
     assert post.title == "new title"
+
+
+def test_rule_not_invoked_on_non_tracked_field_change():
+    action = PostNotificationRule(
+        is_published_next=True,
+        is_published_prev=None,
+        channel="console",
+        template_prefix="df_notifications/posts/published",
+    )
+    action.save()
+    Template.objects.create(
+        name=f"{action.template_prefix}_title.txt",
+        content="New post: {{ instance.title }}",
+    )
+    Template.objects.create(
+        name=f"{action.template_prefix}_console_body.txt",
+        content="{{ instance.description }}",
+    )
+
+    user = User.objects.create(
+        email="test@test.com",
+    )
+    post = Post.objects.create(
+        title="Title 1",
+        description="Content 1",
+        is_published=True,
+        author=user,
+    )
+    assert len(NotificationHistory.objects.all()) == 1
+    post.title = "Title 2"
+    post.save()
+    assert len(NotificationHistory.objects.all()) == 1
+    post.is_published = False
+    post.save()
+    assert len(NotificationHistory.objects.all()) == 1
+    post.is_published = True
+    post.save()
+    assert len(NotificationHistory.objects.all()) == 2

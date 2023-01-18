@@ -93,6 +93,7 @@ DF_NOTIFICATIONS = {
         "console": "df_notifications.channels.ConsoleChannel",
         "push": "df_notifications.channels.FirebasePushChannel",
         "webhook": "df_notifications.channels.JSONPostWebhookChannel",
+        "slack": "df_notifications.channels.SlackChannel",
         "test": "tests.channels.TestChannel",
     },
     "SAVE_HISTORY_CONTENT": True,

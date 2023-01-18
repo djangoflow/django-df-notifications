@@ -9,3 +9,4 @@ django-celery-beat
 django-import-export
 pytest
 pytest-django
+django-dbtemplates

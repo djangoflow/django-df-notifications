@@ -97,6 +97,18 @@ class NotifiableModelMixin(models.Model):
 
 class BaseModelRule(GenericBase[M], models.Model):
     model: Type[M]
+    tracking_fields: Optional[List[str]] = None
+
+    @classmethod
+    def is_field_changed(cls, instance: M, prev: Optional[M]):
+        if cls.tracking_fields is None or prev is None:
+            return True
+
+        for field in cls.tracking_fields:
+            if getattr(instance, field) != getattr(prev, field):
+                return True
+
+        return False
 
     @classmethod
     def get_queryset(cls, instance: M, prev: Optional[M]) -> QuerySet["BaseModelRule"]:
@@ -110,9 +122,13 @@ class BaseModelRule(GenericBase[M], models.Model):
 
     @classmethod
     def invoke(cls, instance: M):
-        prev_instance = getattr(instance, "_pre_save_instance", None)
-        for action in cls.get_queryset(instance, prev_instance):
-            if action.check_condition(instance, prev_instance):
+        prev = getattr(instance, "_pre_save_instance", None)
+
+        if not cls.is_field_changed(instance, prev):
+            return
+
+        for action in cls.get_queryset(instance, prev):
+            if action.check_condition(instance, prev):
                 action.perform_action(instance)
 
     class Meta:
@@ -148,6 +164,7 @@ class BaseModelReminder(GenericBase[M], models.Model):
 
 class NotificationModelMixin(models.Model):
     model: Type[M]
+    admin_list_display: List[str] = ["channel", "template_prefix"]
 
     history = models.ManyToManyField(NotificationHistory, blank=True, editable=False)
     channel = NoMigrationsChoicesField(
