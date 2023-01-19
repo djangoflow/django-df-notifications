@@ -3,7 +3,7 @@ DEBUG = True
 ROOT_URLCONF = "tests.urls"
 SECRET_KEY = "111111"
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 INSTALLED_APPS = [
     "django.contrib.admin",

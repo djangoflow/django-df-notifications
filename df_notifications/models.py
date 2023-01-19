@@ -41,6 +41,14 @@ else:
 
 
 class UserDevice(AbstractFCMDevice):
+    user = models.ForeignKey(
+        User,
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_query_name=_("fcmdevice"),
+    )
+
     class Meta:
         verbose_name = _("User device")
         verbose_name_plural = _("User devices")
@@ -58,6 +66,7 @@ class NotificationHistoryQuerySet(models.QuerySet):
 
 
 class NotificationHistory(models.Model):
+    id = models.BigAutoField(primary_key=True)
     users = models.ManyToManyField(User, blank=True)
     created = models.DateTimeField(auto_now_add=True, db_index=True)
     channel = NoMigrationsChoicesField(
@@ -240,6 +249,7 @@ class NotificationModelReminder(NotificationModelMixin, BaseModelReminder):
         help_text="Python code to execute. You can use "
         "`instance` variable to access current model",
         default="",
+        blank=True,
     )
 
     def get_model_queryset(self) -> QuerySet[M]:
