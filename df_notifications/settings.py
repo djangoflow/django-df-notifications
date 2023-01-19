@@ -8,6 +8,8 @@ DEFAULTS = {
         "console": "df_notifications.channels.ConsoleChannel",
         "push": "df_notifications.channels.FirebasePushChannel",
         "webhook": "df_notifications.channels.JSONPostWebhookChannel",
+        "chat": "df_notifications.channels.FirebaseChatChannel",
+        "slack": "df_notifications.channels.SlackChannel",
     },
     "SAVE_HISTORY_CONTENT": True,
     "REMINDERS_CHECK_PERIOD": 60,
