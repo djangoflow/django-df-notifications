@@ -1,6 +1,10 @@
+from df_notifications.models import NotificationModelMixin
+from df_notifications.utils import channel_instance
 from django.contrib import admin
 from django.db.models.signals import post_save
 from django.db.models.signals import pre_save
+from django.urls import reverse
+from django.utils.safestring import mark_safe
 from import_export.admin import ImportExportMixin
 from import_export.resources import ModelResource
 
@@ -29,7 +33,10 @@ def register_notification_model_admin(model_class):
     @admin.register(ProxyModel)
     class AdminProxyModel(ImportExportMixin, admin.ModelAdmin):
         def get_list_display(self, request):
-            return model_class.admin_list_display
+            return (
+                *model_class.admin_list_display,
+                "templates",
+            )
 
         def get_resource_classes(self):
             class ProxyModelResource(ModelResource):
@@ -39,6 +46,31 @@ def register_notification_model_admin(model_class):
                     report_skipped = False
 
             return [ProxyModelResource]
+
+        def templates(self, obj):
+            try:
+                import dbtemplates  # noqa
+
+                url = (
+                    reverse("admin:dbtemplates_template_changelist")
+                    + f"?q={obj.template_prefix}"
+                )
+                return mark_safe(f'<a href="{url}">Change</a>')
+            except ImportError:
+                return ""
+
+        @admin.action(description="Create DB Templates for notifications")
+        def populate(self, request, qs):
+            from dbtemplates.models import Template
+
+            for item in qs:
+                assert isinstance(item, NotificationModelMixin)
+                for part in channel_instance(item.channel).template_parts:
+                    Template.objects.get_or_create(
+                        name=f"{item.template_prefix}_{item.channel}_{part}",
+                    )
+
+        actions = [populate]
 
 
 def register_rule_model(rule_class):
