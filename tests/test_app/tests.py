@@ -27,7 +27,7 @@ def setup_published_notification():
     Template.objects.create(
         name="df_notifications/posts/published.html",
         content="""
-            {% block title %}New post: {{ instance.title }}{% endblock %}
+            {% block subject %}New post: {{ instance.title }}{% endblock %}
             {% block body %}{{ instance.description }}{% endblock %}
         """,
     )
@@ -48,7 +48,7 @@ def test_post_published_notification_created():
     notifications = NotificationHistory.objects.all()
     assert len(notifications) == 1
     notification = notifications[0]
-    assert notification.content["title"] == f"New post: {post.title}"
+    assert notification.content["subject"] == f"New post: {post.title}"
     assert notification.content["body"] == post.description
 
 
@@ -175,7 +175,7 @@ def test_send_notification_without_model():
     Template.objects.create(
         name="df_notifications/posts/published.html",
         content="""
-            {% block title %}New post: {{ title }}{% endblock %}
+            {% block subject %}New post: {{ title }}{% endblock %}
             {% block body %}{{ description }}{% endblock %}
         """,
     )
@@ -188,7 +188,7 @@ def test_send_notification_without_model():
             "description": "description 456",
         },
     )
-    assert notification.content["title"] == "New post: title 123"
+    assert notification.content["subject"] == "New post: title 123"
     assert notification.content["body"] == "description 456"
 
 
@@ -199,7 +199,7 @@ def test_send_notification_async_without_model():
     Template.objects.create(
         name="df_notifications/posts/published.html",
         content="""
-                {% block title %}New post: {{ title }}{% endblock %}
+                {% block subject %}New post: {{ title }}{% endblock %}
                 {% block body %}{{ description }}{% endblock %}
             """,
     )
@@ -215,7 +215,7 @@ def test_send_notification_async_without_model():
     notifications = NotificationHistory.objects.all()
     assert len(notifications) == 1
     notification = notifications[0]
-    assert notification.content["title"] == "New post: title 123"
+    assert notification.content["subject"] == "New post: title 123"
     assert notification.content["body"] == "description 456"
 
 
@@ -250,14 +250,6 @@ def test_rule_not_invoked_on_non_tracked_field_change():
         template="df_notifications/posts/published.html",
     )
     action.save()
-    Template.objects.create(
-        name=f"{action.template}_title.txt",
-        content="New post: {{ instance.title }}",
-    )
-    Template.objects.create(
-        name=f"{action.template}_console_body.txt",
-        content="{{ instance.description }}",
-    )
 
     user = User.objects.create(
         email="test@test.com",

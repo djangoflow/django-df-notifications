@@ -17,21 +17,21 @@ User = get_user_model()
 
 
 class BaseChannel:
-    template_parts = ["title", "body", "body_html", "data"]
+    template_parts = ["subject", "body", "body_html", "data"]
 
     def send(self, users: List[User], context: Dict[str, str]):
         pass
 
 
 class EmailChannel(BaseChannel):
-    template_parts = ["title", "body", "body_html"]
+    template_parts = ["subject", "body", "body_html"]
 
     def send(self, users: List[User], context: Dict[str, str]):
         recipients = context.get(
             "recipients", [user.email for user in users if user.email]
         )
         msg = EmailMultiAlternatives(
-            subject=context["title"], to=recipients, body=context["body"]
+            subject=context["subject"], to=recipients, body=context["body"]
         )
         msg.attach_alternative(context["body_html"], "text/html")
         for attachment in context.get("attachments", []):
@@ -40,16 +40,16 @@ class EmailChannel(BaseChannel):
 
 
 class ConsoleChannel(BaseChannel):
-    template_parts = ["title", "body"]
+    template_parts = ["subject", "body"]
 
     def send(self, users: List[User], context: Dict[str, str]):
         logging.info(
-            f"users: {users}; title: {context['title']}; body: {context['body']}"
+            f"users: {users}; subject: {context['subject']}; body: {context['body']}"
         )
 
 
 class FirebasePushChannel(BaseChannel):
-    template_parts = ["title", "body", "data"]
+    template_parts = ["subject", "body", "data"]
 
     def send(self, users: List[User], context: Dict[str, str]):
         try:
@@ -62,10 +62,10 @@ class FirebasePushChannel(BaseChannel):
         devices.filter(user__in=users).send_message(
             Message(
                 notification=Notification(
-                    title=context["title.txt"],
-                    body=context["body.txt"],
+                    title=context["subject"],
+                    body=context["body"],
                 ),
-                data=json.loads(context["data.json"]),
+                data=json.loads(context["data"]),
             ),
         )
 
@@ -78,13 +78,13 @@ class JSONPostWebhookChannel(BaseChannel):
 
 
 class SlackChannel(BaseChannel):
-    template_parts = ["title", "body"]
+    template_parts = ["subject", "body"]
 
     def send(self, users: List[User], context: Dict[str, str]):
         slack_message(
             "df_notifications/base_slack.html",
             context=context,
-            attachments=[{"title": context["title"], "text": context["body"]}],
+            attachments=[{"title": context["subject"], "text": context["body"]}],
         )
 
 
