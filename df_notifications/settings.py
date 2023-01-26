@@ -18,5 +18,5 @@ DEFAULTS = {
 IMPORT_STRINGS = []
 
 api_settings = APISettings(
-    getattr(settings, "DF_NOTIFICATIONS", IMPORT_STRINGS), DEFAULTS
+    getattr(settings, "DF_NOTIFICATIONS", None), DEFAULTS, IMPORT_STRINGS
 )

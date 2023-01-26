@@ -33,6 +33,6 @@ def send_model_notification_async(model_notification_class, notification_pk, mod
 
 
 @app.task
-def send_notification_async(user_ids, channel_name, template_prefix, context):
+def send_notification_async(user_ids, channel_name, template, context):
     users = User.objects.filter(id__in=user_ids)
-    send_notification(users, channel_name, template_prefix, context)
+    send_notification(users, channel_name, template, context)

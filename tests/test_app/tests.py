@@ -21,16 +21,15 @@ def setup_published_notification():
         is_published_next=True,
         is_published_prev=False,
         channel="console",
-        template_prefix="df_notifications/posts/published",
+        template="df_notifications/posts/published.html",
     )
     action.save()
     Template.objects.create(
-        name=f"{action.template_prefix}_title.txt",
-        content="New post: {{ instance.title }}",
-    )
-    Template.objects.create(
-        name=f"{action.template_prefix}_console_body.txt",
-        content="{{ instance.description }}",
+        name="df_notifications/posts/published.html",
+        content="""
+            {% block title %}New post: {{ instance.title }}{% endblock %}
+            {% block body %}{{ instance.description }}{% endblock %}
+        """,
     )
 
 
@@ -49,8 +48,8 @@ def test_post_published_notification_created():
     notifications = NotificationHistory.objects.all()
     assert len(notifications) == 1
     notification = notifications[0]
-    assert notification.content["title.txt"] == f"New post: {post.title}"
-    assert notification.content["body.txt"] == post.description
+    assert notification.content["title"] == f"New post: {post.title}"
+    assert notification.content["body"] == post.description
 
 
 def test_post_non_published_notification_not_created():
@@ -90,14 +89,14 @@ def test_notification_history_queryset_for_instance_filtering():
     notifications = NotificationHistory.objects.for_instance(post1)
     assert len(notifications) == 1
     notification = notifications[0]
-    assert notification.content["body.txt"] == post1.description
+    assert notification.content["body"] == post1.description
 
 
 def test_reminder_queryset_is_valid():
     reminder = PostNotificationReminder(
         is_published=True,
         channel="console",
-        template_prefix="df_notifications/posts/published",
+        template="df_notifications/posts/published.html",
     )
     reminder.save()
 
@@ -120,7 +119,7 @@ def test_reminder_respect_delay():
     reminder = PostNotificationReminder(
         is_published=True,
         channel="console",
-        template_prefix="df_notifications/posts/published",
+        template="df_notifications/posts/published.html",
         delay=timezone.timedelta(seconds=60),
     )
     reminder.save()
@@ -144,7 +143,7 @@ def test_reminder_performs_retries():
     reminder = PostNotificationReminder(
         is_published=True,
         channel="console",
-        template_prefix="df_notifications/posts/published",
+        template="df_notifications/posts/published.html",
         repeat=2,
         cooldown=timezone.timedelta(seconds=0),
         delay=timezone.timedelta(seconds=0),
@@ -174,24 +173,23 @@ def test_send_notification_without_model():
         email="test@test.com",
     )
     Template.objects.create(
-        name=f"notifications_title.txt",
-        content="New post: {{ title }}",
-    )
-    Template.objects.create(
-        name=f"notifications_console_body.txt",
-        content="{{ description }}",
+        name="df_notifications/posts/published.html",
+        content="""
+            {% block title %}New post: {{ title }}{% endblock %}
+            {% block body %}{{ description }}{% endblock %}
+        """,
     )
     notification = send_notification(
         users=[user],
-        channel_name="console",
-        template_prefix="notifications",
+        channel="console",
+        template="df_notifications/posts/published.html",
         context={
             "title": "title 123",
             "description": "description 456",
         },
     )
-    assert notification.content["title.txt"] == "New post: title 123"
-    assert notification.content["body.txt"] == "description 456"
+    assert notification.content["title"] == "New post: title 123"
+    assert notification.content["body"] == "description 456"
 
 
 def test_send_notification_async_without_model():
@@ -199,17 +197,16 @@ def test_send_notification_async_without_model():
         email="test@test.com",
     )
     Template.objects.create(
-        name=f"notifications_title.txt",
-        content="New post: {{ title }}",
-    )
-    Template.objects.create(
-        name=f"notifications_console_body.txt",
-        content="{{ description }}",
+        name="df_notifications/posts/published.html",
+        content="""
+                {% block title %}New post: {{ title }}{% endblock %}
+                {% block body %}{{ description }}{% endblock %}
+            """,
     )
     send_notification_async(
         [user.id],
         "console",
-        "notifications",
+        "df_notifications/posts/published.html",
         {
             "title": "title 123",
             "description": "description 456",
@@ -218,15 +215,15 @@ def test_send_notification_async_without_model():
     notifications = NotificationHistory.objects.all()
     assert len(notifications) == 1
     notification = notifications[0]
-    assert notification.content["title.txt"] == "New post: title 123"
-    assert notification.content["body.txt"] == "description 456"
+    assert notification.content["title"] == "New post: title 123"
+    assert notification.content["body"] == "description 456"
 
 
 def test_reminder_performs_action():
     reminder = PostNotificationReminder(
         is_published=True,
         channel="console",
-        template_prefix="df_notifications/posts/published",
+        template="df_notifications/posts/published.html",
         action="instance.title='new title'; instance.save()",
     )
     reminder.save()
@@ -250,15 +247,15 @@ def test_rule_not_invoked_on_non_tracked_field_change():
         is_published_next=True,
         is_published_prev=None,
         channel="console",
-        template_prefix="df_notifications/posts/published",
+        template="df_notifications/posts/published.html",
     )
     action.save()
     Template.objects.create(
-        name=f"{action.template_prefix}_title.txt",
+        name=f"{action.template}_title.txt",
         content="New post: {{ instance.title }}",
     )
     Template.objects.create(
-        name=f"{action.template_prefix}_console_body.txt",
+        name=f"{action.template}_console_body.txt",
         content="{{ instance.description }}",
     )
 

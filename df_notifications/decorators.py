@@ -1,6 +1,7 @@
 from df_notifications.models import NotificationModelMixin
-from df_notifications.utils import channel_instance
+from df_notifications.utils import get_channel_instance
 from django.contrib import admin
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.signals import post_save
 from django.db.models.signals import pre_save
 from django.urls import reverse
@@ -35,7 +36,7 @@ def register_notification_model_admin(model_class):
         def get_list_display(self, request):
             return (
                 *model_class.admin_list_display,
-                "templates",
+                "content",
             )
 
         def get_resource_classes(self):
@@ -47,28 +48,31 @@ def register_notification_model_admin(model_class):
 
             return [ProxyModelResource]
 
-        def templates(self, obj):
+        def content(self, obj):
             try:
-                import dbtemplates  # noqa
+                from dbtemplates.models import Template
 
-                url = (
-                    reverse("admin:dbtemplates_template_changelist")
-                    + f"?q={obj.template_prefix}"
-                )
+                template = Template.objects.get(name=obj.template)
+                url = reverse("admin:dbtemplates_template_change", args=[template.pk])
                 return mark_safe(f'<a href="{url}">Change</a>')
-            except ImportError:
+            except (ImportError, ObjectDoesNotExist):
                 return ""
 
-        @admin.action(description="Create DB Templates for notifications")
+        @admin.action(
+            description="Initialize DB Templates for notifications (override current content)"
+        )
         def populate(self, request, qs):
             from dbtemplates.models import Template
 
             for item in qs:
                 assert isinstance(item, NotificationModelMixin)
-                for part in channel_instance(item.channel).template_parts:
-                    Template.objects.get_or_create(
-                        name=f"{item.template_prefix}_{item.channel}_{part}",
-                    )
+                content = "\n\n".join(
+                    f"{{% block {part} %}}{{% endblock %}}"
+                    for part in get_channel_instance(item.channel).template_parts
+                )
+                Template.objects.update_or_create(
+                    name=item.template, defaults={"content": content}
+                )
 
         actions = [populate]
 
