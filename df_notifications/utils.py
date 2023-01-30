@@ -4,6 +4,7 @@ from df_notifications.models import NotificationHistory
 from django.conf import settings
 from django.utils.module_loading import import_string
 from functools import cache
+from render_block import BlockNotFound
 from render_block import render_block_to_string
 from typing import Any
 from typing import Dict
@@ -19,10 +20,15 @@ def send_notification(
     users: List[User], channel: str, template: str, context: Dict[str, Any]
 ):
     channel_instance = get_channel_instance(channel)
-    parts = {
-        part: render_block_to_string(template, part, context=context)
-        for part in channel_instance.template_parts
-    }
+    parts = {}
+    for part in channel_instance.template_parts:
+        try:
+            parts[part] = render_block_to_string(
+                template, f"{part}__{channel}", context=context
+            )
+        except BlockNotFound:
+            parts[part] = render_block_to_string(template, part, context=context)
+
     channel_instance.send(users, {**context, **parts})
 
     notification = NotificationHistory.objects.create(

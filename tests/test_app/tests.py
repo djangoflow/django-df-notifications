@@ -176,7 +176,7 @@ def test_send_notification_without_model():
         name="df_notifications/posts/published.html",
         content="""
             {% block subject %}New post: {{ title }}{% endblock %}
-            {% block body %}{{ description }}{% endblock %}
+            {% block body__console %}{{ description }}{% endblock %}
         """,
     )
     notification = send_notification(
