@@ -1,6 +1,7 @@
 from dbtemplates.models import Template
 from df_notifications.models import NotificationHistory
 from df_notifications.tasks import send_notification_async
+from df_notifications.utils import render_block
 from df_notifications.utils import send_notification
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -220,6 +221,13 @@ def test_send_notification_async_without_model():
 
 
 def test_reminder_performs_action():
+    Template.objects.create(
+        name="df_notifications/posts/published.html",
+        content="""
+                {% block subject %}New post: {{ title }}{% endblock %}
+                {% block body__console %}{{ description }}{% endblock %}
+            """,
+    )
     reminder = PostNotificationReminder(
         is_published=True,
         channel="console",
@@ -270,3 +278,25 @@ def test_rule_not_invoked_on_non_tracked_field_change():
     post.is_published = True
     post.save()
     assert len(NotificationHistory.objects.all()) == 2
+
+
+def test_render_block_block_nested():
+    Template.objects.create(
+        name="t1.html",
+        content="""
+            {% block subject %}subj1{% endblock %}
+        """,
+    )
+    Template.objects.create(
+        name="t2.html",
+        content="""
+            {% extends 't1.html' %}
+        """,
+    )
+    Template.objects.create(
+        name="t3.html",
+        content="""
+            {% extends 't2.html' %}
+        """,
+    )
+    assert render_block("t3.html", "subject", {}) == "subj1"
