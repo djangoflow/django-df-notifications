@@ -10,6 +10,7 @@ DEFAULTS = {
         "webhook": "df_notifications.channels.JSONPostWebhookChannel",
         "chat": "df_notifications.channels.FirebaseChatChannel",
         "slack": "df_notifications.channels.SlackChannel",
+        "sms": "df_notifications.channels.TwilioSMSChannel",
     },
     "SAVE_HISTORY_CONTENT": True,
     "REMINDERS_CHECK_PERIOD": 60,

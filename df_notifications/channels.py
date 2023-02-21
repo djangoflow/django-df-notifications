@@ -7,6 +7,7 @@ from firebase_admin.messaging import Message
 from firebase_admin.messaging import Notification
 from typing import Dict
 from typing import List
+from otp_twilio.models import TwilioSMSDevice
 
 import json
 import logging
@@ -104,3 +105,11 @@ class FirebaseChatChannel(BaseChannel):
                 "authorId": context.get("chat_author_id", "system"),
             }
         )
+
+
+class TwilioSMSChannel(BaseChannel):
+    template_parts = ["body"]
+
+    def send(self, users: List[User], context: Dict[str, str]):
+        for device in TwilioSMSDevice.objects.filter(user__in=users):
+            device._deliver_token(context["body"])
