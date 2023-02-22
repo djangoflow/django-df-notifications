@@ -195,7 +195,7 @@ class NotificationModelMixin(models.Model):
     def get_template_prefixes(self):
         return [
             self.template_prefix,
-            f"{self.model._meta.app_label}/df_notifications/{self.model._meta.model_name}",
+            f"{self.model._meta.app_label}/df_notifications/{self.model._meta.model_name}/",
         ]
 
     def send(self, instance: M):
