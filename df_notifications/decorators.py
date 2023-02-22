@@ -1,9 +1,11 @@
 from df_notifications.models import NotificationModelMixin
 from df_notifications.utils import get_channel_instance
 from django.contrib import admin
-from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
 from django.db.models.signals import post_save
 from django.db.models.signals import pre_save
+from django.template import TemplateDoesNotExist
+from django.template.loader import get_template
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from import_export.admin import ImportExportMixin
@@ -49,14 +51,8 @@ def register_notification_model_admin(model_class):
             return [ProxyModelResource]
 
         def content(self, obj):
-            try:
-                from dbtemplates.models import Template
-
-                template = Template.objects.get(name=obj.template)
-                url = reverse("admin:dbtemplates_template_change", args=[template.pk])
-                return mark_safe(f'<a href="{url}">Change</a>')
-            except (ImportError, ObjectDoesNotExist):
-                return ""
+            url = reverse("admin:dbtemplates_template_changelist")
+            return mark_safe(f'<a href="{url}?q={obj.template_prefix}">Change</a>')
 
         @admin.action(
             description="Initialize DB Templates for notifications (override current content)"
@@ -66,13 +62,21 @@ def register_notification_model_admin(model_class):
 
             for item in qs:
                 assert isinstance(item, NotificationModelMixin)
-                content = "\n\n".join(
-                    f"{{% block {part} %}}{{% endblock %}}"
-                    for part in get_channel_instance(item.channel).template_parts
-                )
-                Template.objects.update_or_create(
-                    name=item.template, defaults={"content": content}
-                )
+
+                for part in get_channel_instance(item.channel).template_parts:
+                    names = [
+                        f"{item.template_prefix}{item.channel}__{part}",
+                        f"{item.template_prefix}{part}",
+                    ]
+                    for name in names:
+                        try:
+                            with transaction.atomic():
+                                Template.objects.filter(name=name).delete()
+                                template = get_template(name)
+                                with open(template.origin.name, "r") as f:
+                                    Template.objects.create(name=name, content=f.read())
+                        except TemplateDoesNotExist:
+                            pass
 
         actions = [populate]
 
