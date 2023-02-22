@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     "tests.test_app.apps.TestAppConfig",
     "dbtemplates",
     "django_celery_beat",
+    "otp_twilio",
 ]
 
 MIDDLEWARE = [

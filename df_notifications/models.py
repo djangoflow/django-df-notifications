@@ -73,7 +73,7 @@ class NotificationHistory(models.Model):
         max_length=255,
         choices=[(key, key) for key in settings.DF_NOTIFICATIONS["CHANNELS"]],
     )
-    template = models.CharField(max_length=255)
+    template_prefix = models.CharField(max_length=255)
     content = models.JSONField(default=dict, blank=True)
 
     content_type = models.ForeignKey(
@@ -88,7 +88,7 @@ class NotificationHistory(models.Model):
         verbose_name_plural = "Notification history"
 
         indexes = [
-            models.Index(fields=["template", "created"]),
+            models.Index(fields=["template_prefix", "created"]),
             models.Index(fields=["channel", "created"]),
             models.Index(fields=["content_type", "instance_id", "created"]),
         ]
@@ -173,14 +173,14 @@ class BaseModelReminder(GenericBase[M], models.Model):
 
 class NotificationModelMixin(models.Model):
     model: Type[M]
-    admin_list_display: List[str] = ["channel", "template"]
+    admin_list_display: List[str] = ["channel", "template_prefix"]
 
     history = models.ManyToManyField(NotificationHistory, blank=True, editable=False)
     channel = NoMigrationsChoicesField(
         max_length=255,
         choices=[(key, key) for key in settings.DF_NOTIFICATIONS["CHANNELS"]],
     )
-    template = models.CharField(max_length=255)
+    template_prefix = models.CharField(max_length=255)
     context = models.JSONField(default=dict, blank=True)
 
     def get_users(self, instance: M) -> List[User]:
@@ -192,13 +192,19 @@ class NotificationModelMixin(models.Model):
             "instance": instance,
         }
 
+    def get_template_prefixes(self):
+        return [
+            self.template_prefix,
+            f"{self.model._meta.app_label}/df_notifications/{self.model._meta.model_name}",
+        ]
+
     def send(self, instance: M):
         from .utils import send_notification
 
         notification = send_notification(
             self.get_users(instance),
             self.channel,
-            self.template,
+            self.get_template_prefixes(),
             self.get_context(instance),
         )
         self.history.add(notification)

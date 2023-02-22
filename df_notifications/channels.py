@@ -5,9 +5,9 @@ from django_slack import slack_message
 from firebase_admin.firestore import client
 from firebase_admin.messaging import Message
 from firebase_admin.messaging import Notification
+from otp_twilio.models import TwilioSMSDevice
 from typing import Dict
 from typing import List
-from otp_twilio.models import TwilioSMSDevice
 
 import json
 import logging
@@ -18,39 +18,39 @@ User = get_user_model()
 
 
 class BaseChannel:
-    template_parts = ["subject", "body", "body_html", "data"]
+    template_parts = ["subject.txt", "body.txt", "body.html", "data.json"]
 
     def send(self, users: List[User], context: Dict[str, str]):
         pass
 
 
 class EmailChannel(BaseChannel):
-    template_parts = ["subject", "body", "body_html"]
+    template_parts = ["subject.txt", "body.txt", "body.html"]
 
     def send(self, users: List[User], context: Dict[str, str]):
         recipients = context.get(
             "recipients", [user.email for user in users if user.email]
         )
         msg = EmailMultiAlternatives(
-            subject=context["subject"], to=recipients, body=context["body"]
+            subject=context["subject.txt"], to=recipients, body=context["body.txt"]
         )
-        msg.attach_alternative(context["body_html"], "text/html")
+        msg.attach_alternative(context["body.html"], "text/html")
         for attachment in context.get("attachments", []):
             msg.attach(**attachment)
         msg.send()
 
 
 class ConsoleChannel(BaseChannel):
-    template_parts = ["subject", "body"]
+    template_parts = ["subject.txt", "body.txt"]
 
     def send(self, users: List[User], context: Dict[str, str]):
         logging.info(
-            f"users: {users}; subject: {context['subject']}; body: {context['body']}"
+            f"users: {users}; subject: {context['subject.txt']}; body: {context['body.txt']}"
         )
 
 
 class FirebasePushChannel(BaseChannel):
-    template_parts = ["subject", "body", "data"]
+    template_parts = ["subject.txt", "body.txt", "data.json"]
 
     def send(self, users: List[User], context: Dict[str, str]):
         try:
@@ -63,34 +63,36 @@ class FirebasePushChannel(BaseChannel):
         devices.filter(user__in=users).send_message(
             Message(
                 notification=Notification(
-                    title=context["subject"],
-                    body=context["body"],
+                    title=context["subject.txt"],
+                    body=context["body.txt"],
                 ),
-                data=json.loads(context["data"]),
+                data=json.loads(context["data.json"]),
             ),
         )
 
 
 class JSONPostWebhookChannel(BaseChannel):
-    template_parts = ["data"]
+    template_parts = ["data.json"]
 
     def send(self, users: List[User], context: Dict[str, str]):
-        requests.post(context["url"], json=json.loads(context["data"]))
+        requests.post(context["url"], json=json.loads(context["data.json"]))
 
 
 class SlackChannel(BaseChannel):
-    template_parts = ["subject", "body"]
+    template_parts = ["subject.txt", "body.txt"]
 
     def send(self, users: List[User], context: Dict[str, str]):
         slack_message(
             "df_notifications/base_slack.html",
             context=context,
-            attachments=[{"title": context["subject"], "text": context["body"]}],
+            attachments=[
+                {"title": context["subject.txt"], "text": context["body.txt"]}
+            ],
         )
 
 
 class FirebaseChatChannel(BaseChannel):
-    template_parts = ["body"]
+    template_parts = ["body.txt"]
 
     def send(self, users: List[User], context: Dict[str, str]):
         db = client()
@@ -98,7 +100,7 @@ class FirebaseChatChannel(BaseChannel):
             "messages"
         ).document().set(
             {
-                "text": context["body"],
+                "text": context["body.txt"],
                 "createdAt": timezone.now(),
                 "updatedAt": timezone.now(),
                 "type": "text",
@@ -108,8 +110,8 @@ class FirebaseChatChannel(BaseChannel):
 
 
 class TwilioSMSChannel(BaseChannel):
-    template_parts = ["body"]
+    template_parts = ["body.txt"]
 
     def send(self, users: List[User], context: Dict[str, str]):
         for device in TwilioSMSDevice.objects.filter(user__in=users):
-            device._deliver_token(context["body"])
+            device._deliver_token(context["body.txt"])

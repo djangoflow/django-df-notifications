@@ -15,9 +15,9 @@ class UserDeviceAdmin(DeviceAdmin):
 
 @admin.register(NotificationHistory)
 class NotificationHistoryAdmin(admin.ModelAdmin):
-    list_display = ("template", "channel", "instance_id", "created")
+    list_display = ("template_prefix", "channel", "instance_id", "created")
     date_hierarchy = "created"
     search_fields = (
-        "template",
+        "template_prefix",
         "channel",
     )

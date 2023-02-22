@@ -10,5 +10,4 @@ django-import-export
 pytest
 pytest-django
 django-dbtemplates
-django-render-block
 django-otp-twilio
