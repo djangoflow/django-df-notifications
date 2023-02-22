@@ -32,7 +32,7 @@ def send_notification(
         for prefix in template_prefixes:
             templates.append(f"{prefix}{channel}__{part}")
             templates.append(f"{prefix}{part}")
-        parts[part] = render_to_string(templates, context=context)
+        parts[part] = render_to_string(templates, context=context).strip()
 
     channel_instance.send(users, {**context, **parts})
 
