@@ -67,10 +67,14 @@ class FirebasePushChannel(BaseChannel):
 
 
 class JSONPostWebhookChannel(BaseChannel):
-    template_parts = ["data.json"]
+    template_parts = ["subject.txt", "body.txt", "data.json"]
 
     def send(self, users, context: Dict[str, str]):
-        requests.post(context["url"], json=json.loads(context["data.json"]))
+        requests.post(
+            context["subject.txt"].strip(),
+            data=context["body.txt"].strip(),
+            json=json.loads(context["data.json"]),
+        )
 
 
 class SlackChannel(BaseChannel):
