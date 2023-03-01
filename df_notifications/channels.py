@@ -1,4 +1,3 @@
-from django.contrib.auth import get_user_model
 from django.core.mail import EmailMultiAlternatives
 from django.utils import timezone
 from django_slack import slack_message
@@ -7,27 +6,23 @@ from firebase_admin.messaging import Message
 from firebase_admin.messaging import Notification
 from otp_twilio.models import TwilioSMSDevice
 from typing import Dict
-from typing import List
 
 import json
 import logging
 import requests
 
 
-User = get_user_model()
-
-
 class BaseChannel:
     template_parts = ["subject.txt", "body.txt", "body.html", "data.json"]
 
-    def send(self, users: List[User], context: Dict[str, str]):
+    def send(self, users, context: Dict[str, str]):
         pass
 
 
 class EmailChannel(BaseChannel):
     template_parts = ["subject.txt", "body.txt", "body.html"]
 
-    def send(self, users: List[User], context: Dict[str, str]):
+    def send(self, users, context: Dict[str, str]):
         recipients = context.get(
             "recipients", [user.email for user in users if user.email]
         )
@@ -43,7 +38,7 @@ class EmailChannel(BaseChannel):
 class ConsoleChannel(BaseChannel):
     template_parts = ["subject.txt", "body.txt"]
 
-    def send(self, users: List[User], context: Dict[str, str]):
+    def send(self, users, context: Dict[str, str]):
         logging.info(
             f"users: {users}; subject: {context['subject.txt']}; body: {context['body.txt']}"
         )
@@ -52,7 +47,7 @@ class ConsoleChannel(BaseChannel):
 class FirebasePushChannel(BaseChannel):
     template_parts = ["subject.txt", "body.txt", "data.json"]
 
-    def send(self, users: List[User], context: Dict[str, str]):
+    def send(self, users, context: Dict[str, str]):
         try:
             devices = context["devices_queryset"]
         except KeyError:
@@ -74,14 +69,14 @@ class FirebasePushChannel(BaseChannel):
 class JSONPostWebhookChannel(BaseChannel):
     template_parts = ["data.json"]
 
-    def send(self, users: List[User], context: Dict[str, str]):
+    def send(self, users, context: Dict[str, str]):
         requests.post(context["url"], json=json.loads(context["data.json"]))
 
 
 class SlackChannel(BaseChannel):
     template_parts = ["subject.txt", "body.txt"]
 
-    def send(self, users: List[User], context: Dict[str, str]):
+    def send(self, users, context: Dict[str, str]):
         slack_message(
             "df_notifications/base_slack.html",
             context=context,
@@ -94,7 +89,7 @@ class SlackChannel(BaseChannel):
 class FirebaseChatChannel(BaseChannel):
     template_parts = ["body.txt"]
 
-    def send(self, users: List[User], context: Dict[str, str]):
+    def send(self, users, context: Dict[str, str]):
         db = client()
         db.collection("rooms").document(context["chat_room_id"]).collection(
             "messages"
@@ -112,6 +107,6 @@ class FirebaseChatChannel(BaseChannel):
 class TwilioSMSChannel(BaseChannel):
     template_parts = ["body.txt"]
 
-    def send(self, users: List[User], context: Dict[str, str]):
+    def send(self, users, context: Dict[str, str]):
         for device in TwilioSMSDevice.objects.filter(user__in=users):
             device._deliver_token(context["body.txt"])

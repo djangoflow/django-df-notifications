@@ -1,5 +1,4 @@
 from df_notifications.channels import BaseChannel
-from df_notifications.channels import User
 from df_notifications.models import NotificationHistory
 from django.conf import settings
 from django.template.loader import render_to_string
@@ -17,7 +16,7 @@ def get_channel_instance(channel) -> BaseChannel:
 
 
 def send_notification(
-    users: List[User],
+    users,
     channel: str,
     template_prefixes: Union[List[str], str],
     context: Dict[str, Any],

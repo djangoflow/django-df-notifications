@@ -1,7 +1,6 @@
 from datetime import timedelta
 from df_notifications.fields import NoMigrationsChoicesField
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
@@ -25,7 +24,6 @@ from typing import TypeVar
 
 M = TypeVar("M", bound=models.Model)
 
-User = get_user_model()
 
 # https://code.djangoproject.com/ticket/33174
 if TYPE_CHECKING:
@@ -42,7 +40,7 @@ else:
 
 class UserDevice(AbstractFCMDevice):
     user = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         blank=True,
         null=True,
         on_delete=models.CASCADE,
@@ -67,7 +65,7 @@ class NotificationHistoryQuerySet(models.QuerySet):
 
 class NotificationHistory(models.Model):
     id = models.BigAutoField(primary_key=True)
-    users = models.ManyToManyField(User, blank=True)
+    users = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True)
     created = models.DateTimeField(auto_now_add=True, db_index=True)
     channel = NoMigrationsChoicesField(
         max_length=255,
@@ -183,7 +181,7 @@ class NotificationModelMixin(models.Model):
     template_prefix = models.CharField(max_length=255)
     context = models.JSONField(default=dict, blank=True)
 
-    def get_users(self, instance: M) -> List[User]:
+    def get_users(self, instance: M):
         return []
 
     def get_context(self, instance: M) -> Dict[str, Any]:
@@ -214,7 +212,7 @@ class NotificationModelMixin(models.Model):
 
 
 class AsyncNotificationModelMixin(NotificationModelMixin):
-    def send(self, instance: M) -> User:
+    def send(self, instance: M):
         from .tasks import send_model_notification_async
 
         transaction.on_commit(
