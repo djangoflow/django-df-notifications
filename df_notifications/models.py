@@ -58,6 +58,10 @@ class PushActionCategory(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        verbose_name = _("Push action category")
+        verbose_name_plural = _("Push action categories")
+
 
 class PushAction(models.Model):
     category = models.ForeignKey(
