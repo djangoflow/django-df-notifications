@@ -24,7 +24,6 @@ from typing import TypeVar
 
 M = TypeVar("M", bound=models.Model)
 
-
 # https://code.djangoproject.com/ticket/33174
 if TYPE_CHECKING:
 
@@ -50,6 +49,33 @@ class UserDevice(AbstractFCMDevice):
     class Meta:
         verbose_name = _("User device")
         verbose_name_plural = _("User devices")
+
+
+class PushActionCategory(models.Model):
+    name = models.CharField(max_length=64, unique=True, verbose_name="id")
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
+
+
+class PushAction(models.Model):
+    category = models.ForeignKey(
+        PushActionCategory, on_delete=models.CASCADE, related_name="actions"
+    )
+    name = models.CharField(max_length=64, unique=True, verbose_name="id")
+    sequence = models.IntegerField(default=1000)
+
+    button_text = models.CharField(max_length=64)
+    authentication_required = models.BooleanField(default=False)
+    destructive = models.BooleanField(default=False)
+    foreground = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["category", "sequence"]
+
+    def __str__(self):
+        return self.name
 
 
 # -------- Notifications ----------
