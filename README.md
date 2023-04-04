@@ -42,6 +42,7 @@ Endpoints
 ---------
 
 * `devices/`
+* `action-categories/`
 
 Data model
 ----------
@@ -54,18 +55,39 @@ Views and templates
 ...
 
 
-Development
--------------------
+## Development
 
-Running tests
+
+### Running test application.
+
+Here you can check admin and API endpoints.
+
+```
+python3 -m venv venv
+. venv/bin/activate
+pip install -r requirements.txt
+./manage.py runserver
+```
+
+
+### Running tests
 
 ```
 make test
 ```
 
 
-Other modules and links out there
----------------------------------
+### Deploying new version
+
+Change version in `setup.cfg` and push new tag to main branch.
+
+```
+git tag 0.0.x
+git push --tags
+```
+
+## Other modules and links out there
+
 
 ...
 
