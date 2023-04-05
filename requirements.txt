@@ -12,3 +12,4 @@ pytest-django
 django-dbtemplates
 django-otp-twilio
 tweepy==4.13.0
+pytest-recording==0.12.2
