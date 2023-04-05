@@ -8,6 +8,7 @@ celery
 django-celery-beat
 django-import-export
 pytest
+pytest-mock
 pytest-django
 django-dbtemplates
 django-otp-twilio

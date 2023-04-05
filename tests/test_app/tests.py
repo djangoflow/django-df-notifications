@@ -1,4 +1,5 @@
 from dbtemplates.models import Template
+from df_notifications.channels import JSONPostWebhookChannel
 from df_notifications.models import NotificationHistory
 from df_notifications.tasks import send_notification_async
 from df_notifications.utils import send_notification
@@ -313,3 +314,23 @@ def test_default_templates_rendered_if_no_template_exists():
     notification = notifications[0]
     assert notification.content["subject.txt"] == f"New post: {post.title}"
     assert notification.content["body.txt"] == post.description
+
+
+def test_json_post_webhook_channel(mocker):
+    users = []
+    context = {
+        "subject.txt": "https://example.com/endpoint",
+        "body.txt": "   Hello, world!",
+        "data.json": '{"key": "value"}'
+    }
+
+    mock_post = mocker.patch("df_notifications.channels.requests.post")
+
+    channel = JSONPostWebhookChannel()
+    channel.send(users, context)
+
+    mock_post.assert_called_once_with(
+        "https://example.com/endpoint",
+        data="Hello, world!",
+        json={"key": "value"}
+    )
