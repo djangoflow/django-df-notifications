@@ -11,6 +11,8 @@ import json
 import logging
 import requests
 
+from df_notifications.twitter_client import send_dm
+
 
 class BaseChannel:
     template_parts = ["subject.txt", "body.txt", "body.html", "data.json"]
@@ -114,3 +116,10 @@ class TwilioSMSChannel(BaseChannel):
     def send(self, users, context: Dict[str, str]):
         for device in TwilioSMSDevice.objects.filter(user__in=users):
             device._deliver_token(context["body.txt"])
+
+
+class TwitterChannel(BaseChannel):
+    template_parts = ["body.txt"]
+
+    def send(self, users, context: Dict[str, str]):
+        send_dm(text=context["body.txt"])
