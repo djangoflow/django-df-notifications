@@ -96,7 +96,13 @@ DF_NOTIFICATIONS = {
         "webhook": "df_notifications.channels.JSONPostWebhookChannel",
         "slack": "df_notifications.channels.SlackChannel",
         "test": "tests.channels.TestChannel",
+        "twitter": "df_notifications.channels.TwitterChannel",
     },
     "SAVE_HISTORY_CONTENT": True,
     "REMINDERS_CHECK_PERIOD": 5,
+    "TWITTER_CONSUMER_KEY": '1',
+    "TWITTER_CONSUMER_SECRET": '1',
+    "TWITTER_ACCESS_TOKEN": '1',
+    "TWITTER_ACCESS_TOKEN_SECRET": '1',
+    "TWITTER_USERNAME": '1'
 }

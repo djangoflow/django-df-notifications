@@ -1,0 +1,145 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - Python/3.10.6 Requests/2.28.2 Tweepy/4.13.0
+    method: GET
+    uri: https://api.twitter.com/2/users/by/username/1
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAAAAAAAKpWSkksSVSyqlbKTFGyUjI0NrI0NzA3NTAzNjU3tDQxNzVW0lHKS8xNBUoGl+bm
+        JhZlVqUWKTjllwDFS4tTi6ByxXC5+CSgXG0tAAAA//8DAHPAC55ZAAAA
+    headers:
+      api-version:
+      - '2.61'
+      cache-control:
+      - no-cache, no-store, max-age=0
+      content-disposition:
+      - attachment; filename=json.json
+      content-encoding:
+      - gzip
+      content-length:
+      - '99'
+      content-type:
+      - application/json; charset=utf-8
+      date:
+      - Wed, 05 Apr 2023 01:09:15 UTC
+      perf:
+      - '7626143928'
+      server:
+      - tsa_f
+      set-cookie:
+      - guest_id_marketing=v1%3A168065695506031539; Max-Age=63072000; Expires=Fri,
+        04 Apr 2025 01:09:15 GMT; Path=/; Domain=.twitter.com; Secure; SameSite=None
+      - guest_id_ads=v1%3A168065695506031539; Max-Age=63072000; Expires=Fri, 04 Apr
+        2025 01:09:15 GMT; Path=/; Domain=.twitter.com; Secure; SameSite=None
+      - personalization_id="v1_3z20q8QYko+loozEPFqUEA=="; Max-Age=63072000; Expires=Fri,
+        04 Apr 2025 01:09:15 GMT; Path=/; Domain=.twitter.com; Secure; SameSite=None
+      - guest_id=v1%3A168065695506031539; Max-Age=63072000; Expires=Fri, 04 Apr 2025
+        01:09:15 GMT; Path=/; Domain=.twitter.com; Secure; SameSite=None
+      strict-transport-security:
+      - max-age=631138519
+      x-access-level:
+      - read-write-directmessages
+      x-connection-hash:
+      - 07d426d3974cdc61b2f189274debd0d2b67c62b224c5bf0f4626d36da3484a90
+      x-content-type-options:
+      - nosniff
+      x-frame-options:
+      - SAMEORIGIN
+      x-rate-limit-limit:
+      - '900'
+      x-rate-limit-remaining:
+      - '899'
+      x-rate-limit-reset:
+      - '1680657855'
+      x-response-time:
+      - '146'
+      x-transaction-id:
+      - 84b22727b11e07cd
+      x-xss-protection:
+      - '0'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"text": "description 12345"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '29'
+      Content-Type:
+      - application/json
+      Cookie:
+      - guest_id=v1%3A168065695506031539; guest_id_ads=v1%3A168065695506031539; guest_id_marketing=v1%3A168065695506031539;
+        personalization_id="v1_3z20q8QYko+loozEPFqUEA=="
+      User-Agent:
+      - Python/3.10.6 Requests/2.28.2 Tweepy/4.13.0
+    method: POST
+    uri: https://api.twitter.com/2/dm_conversations/with/1329707506357194753/messages
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAAAAAAACzLSwqAIBAA0LvMumDU+dllQtJFiwxK3IR3j6Dtg/dATi3B8kA+1u2svVx3avtZ
+        1z3DAi74KBFNzYvzRiY8f6aojBJYXSTlANPXSy+1/U8okEdGR4bMJogwxgsAAP//AwAGliepbQAA
+        AA==
+    headers:
+      api-version:
+      - '2.61'
+      cache-control:
+      - no-cache, no-store, max-age=0
+      content-disposition:
+      - attachment; filename=json.json
+      content-encoding:
+      - gzip
+      content-length:
+      - '115'
+      content-type:
+      - application/json; charset=utf-8
+      date:
+      - Wed, 05 Apr 2023 01:09:15 UTC
+      location:
+      - https://api.twitter.com/2/dm_events/"1643420501480558600"
+      perf:
+      - '7626143928'
+      server:
+      - tsa_f
+      strict-transport-security:
+      - max-age=631138519
+      x-access-level:
+      - read-write-directmessages
+      x-connection-hash:
+      - 07d426d3974cdc61b2f189274debd0d2b67c62b224c5bf0f4626d36da3484a90
+      x-content-type-options:
+      - nosniff
+      x-frame-options:
+      - SAMEORIGIN
+      x-rate-limit-limit:
+      - '200'
+      x-rate-limit-remaining:
+      - '199'
+      x-rate-limit-reset:
+      - '1680657855'
+      x-response-time:
+      - '177'
+      x-transaction-id:
+      - 88896819ccb181ff
+      x-xss-protection:
+      - '0'
+    status:
+      code: 201
+      message: Created
+version: 1

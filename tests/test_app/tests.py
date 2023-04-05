@@ -204,6 +204,32 @@ def test_send_notification_without_model():
     assert notification.content["body.txt"] == "description 456"
 
 
+@pytest.mark.vcr("/test_send_notification_without_model_twitter_channel.yaml")
+def test_send_notification_without_model_twitter_channel():
+    Template.objects.create(
+        name="df_notifications/posts/published/subject.txt",
+        content="New post: {{ title }}",
+    )
+    Template.objects.create(
+        name="df_notifications/posts/published/body.txt",
+        content="{{ description }}",
+    )
+    user = User.objects.create(
+        email="test@test.com",
+    )
+
+    notification = send_notification(
+        users=[user],
+        channel="twitter",
+        template_prefixes="df_notifications/posts/published/",
+        context={
+            "title": "title 123",
+            "description": "description 12345",
+        },
+    )
+    assert notification.content["body.txt"] == "description 12345"
+
+
 def test_send_notification_async_without_model():
     user = User.objects.create(
         email="test@test.com",
