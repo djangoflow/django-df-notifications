@@ -1,8 +1,10 @@
 from dbtemplates.models import Template
+from df_notifications.channels import BaseChannel
 from df_notifications.models import NotificationHistory
 from df_notifications.tasks import send_notification_async
 from df_notifications.utils import send_notification
 from django.contrib.auth import get_user_model
+from django.test import TestCase
 from django.utils import timezone
 from tests.test_app.models import Post
 from tests.test_app.models import PostNotificationReminder
@@ -313,3 +315,15 @@ def test_default_templates_rendered_if_no_template_exists():
     notification = notifications[0]
     assert notification.content["subject.txt"] == f"New post: {post.title}"
     assert notification.content["body.txt"] == post.description
+
+
+class BaseChannelTest(TestCase):
+    def setUp(self):
+        self.user1 = User.objects.create(username="user1", email="user1@example.com")
+        self.user2 = User.objects.create(username="user2", email="user2@example.com")
+
+    def test_send_method_raises_not_implemented_error(self):
+        channel = BaseChannel()
+        # Ensure all basechannel/subclass instances implement send method.
+        with self.assertRaises(NotImplementedError):
+            channel.send(users=User.objects.all(), context={})

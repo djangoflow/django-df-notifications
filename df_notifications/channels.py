@@ -1,4 +1,6 @@
+from django.contrib.auth import get_user_model
 from django.core.mail import EmailMultiAlternatives
+from django.db.models.query import QuerySet
 from django.utils import timezone
 from django_slack import slack_message
 from firebase_admin.firestore import client
@@ -13,10 +15,33 @@ import requests
 
 
 class BaseChannel:
+    """
+    A base class for sending messages to multiple users through various channels.
+
+    Attributes:
+    -----------
+    template_parts : List[str]
+        A list of strings representing the template files required for composing the message.
+    """
+
     template_parts = ["subject.txt", "body.txt", "body.html", "data.json"]
 
-    def send(self, users, context: Dict[str, str]):
-        pass
+    def send(self, users: QuerySet[get_user_model()], context: Dict[str, str]) -> None:
+        """
+        Sends a message to multiple users through the channel.
+
+        Parameters:
+        -----------
+        users : QuerySet[User]
+            A QuerySet of User objects representing the users to whom the message should be sent.
+        context : Dict[str, str]
+            A dictionary containing the context data required for composing the message.
+
+        Returns:
+        --------
+        None
+        """
+        raise NotImplementedError("This method has not been implemented yet.")
 
 
 class EmailChannel(BaseChannel):
