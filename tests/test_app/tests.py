@@ -7,7 +7,9 @@ from django.utils import timezone
 from tests.test_app.models import Post
 from tests.test_app.models import PostNotificationReminder
 from tests.test_app.models import PostNotificationRule
-
+from unittest.mock import patch
+from django.test import TestCase
+from df_notifications.channels import JSONPostWebhookChannel
 import pytest
 
 
@@ -313,3 +315,26 @@ def test_default_templates_rendered_if_no_template_exists():
     notification = notifications[0]
     assert notification.content["subject.txt"] == f"New post: {post.title}"
     assert notification.content["body.txt"] == post.description
+
+class JSONPostWebhookChannelTestCase(TestCase):
+
+    def setUp(self) -> None:
+        pass
+
+    def test_send(self):
+        with patch("requests.post") as mock_post:
+            channel = JSONPostWebhookChannel()
+            users = User.objects.create(
+                email="john@getease.com",
+            )
+            context = {
+                "subject.txt": "This is subject.",
+                "body.txt": "This is body.",
+                "data.json": '{"dev": "python"}',
+            }
+            channel.send(users, context)
+            mock_post.assert_called_once_with(
+                "This is subject.",
+                data="This is body.",
+                json={"dev": "python"},
+            )
