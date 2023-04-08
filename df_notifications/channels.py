@@ -1,3 +1,5 @@
+from abc import ABC
+from abc import abstractmethod
 from django.core.mail import EmailMultiAlternatives
 from django.utils import timezone
 from django_slack import slack_message
@@ -12,9 +14,10 @@ import logging
 import requests
 
 
-class BaseChannel:
+class BaseChannel(ABC):
     template_parts = ["subject.txt", "body.txt", "body.html", "data.json"]
 
+    @abstractmethod
     def send(self, users, context: Dict[str, str]):
         pass
 
