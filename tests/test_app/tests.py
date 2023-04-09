@@ -1,5 +1,7 @@
+from typing import Dict
 from dbtemplates.models import Template
-from df_notifications.models import NotificationHistory
+from df_notifications.channels import JSONPostWebhookChannel
+from df_notifications.models import NotificationHistory, UserDevice
 from df_notifications.tasks import send_notification_async
 from df_notifications.utils import send_notification
 from django.contrib.auth import get_user_model
@@ -9,11 +11,24 @@ from tests.test_app.models import PostNotificationReminder
 from tests.test_app.models import PostNotificationRule
 
 import pytest
+import json
 
 
 User = get_user_model()
 
 pytestmark = [pytest.mark.django_db]
+
+
+class MockJSONPostWebhookChannel(JSONPostWebhookChannel):
+    def send(self, users, context: Dict[str, str], *args, **kwargs):
+        print(context)
+        client = kwargs.get('client')
+        if client:
+            client.post(
+                context["subject.txt"].strip(),
+                data=context["body.txt"],
+                json=json.loads(context["data.json"]),
+            )
 
 
 def setup_templates():
@@ -313,3 +328,31 @@ def test_default_templates_rendered_if_no_template_exists():
     notification = notifications[0]
     assert notification.content["subject.txt"] == f"New post: {post.title}"
     assert notification.content["body.txt"] == post.description
+
+
+def test_json_post_webhook_channel(client):
+    user = User.objects.create(
+        email="test@test.com",
+        username="test"
+    )
+    user.set_password("test@123")
+    user.save()
+    
+    client.force_login(user)
+
+    endpoint = f"http:///notifications/devices/"
+
+    mock = MockJSONPostWebhookChannel()
+    kwargs = {}
+    context={
+        "subject.txt": f"{endpoint}",
+        "body.txt": {"name": "test-name", "registration_id": "test-registration_id", "type": "ios"},
+        "data.json": "{}",
+    }
+
+    kwargs["client"] = client
+    assert UserDevice.objects.count() == 0
+    mock.send(user, {**context}, **kwargs)
+
+    assert UserDevice.objects.count() == 1
+    assert UserDevice.objects.last().name == "test-name"
