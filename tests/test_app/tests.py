@@ -21,7 +21,6 @@ pytestmark = [pytest.mark.django_db]
 
 class MockJSONPostWebhookChannel(JSONPostWebhookChannel):
     def send(self, users, context: Dict[str, str], *args, **kwargs):
-        print(context)
         client = kwargs.get('client')
         if client:
             client.post(
