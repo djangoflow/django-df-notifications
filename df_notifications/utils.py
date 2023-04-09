@@ -1,6 +1,7 @@
 from df_notifications.channels import BaseChannel
 from df_notifications.models import NotificationHistory
 from django.conf import settings
+from django.core.cache import cache
 from django.template.loader import render_to_string
 from django.utils.module_loading import import_string
 from functools import cache
@@ -10,9 +11,13 @@ from typing import List
 from typing import Union
 
 
-@cache
 def get_channel_instance(channel) -> BaseChannel:
-    return import_string(settings.DF_NOTIFICATIONS["CHANNELS"][channel])()
+    cache_key = f"channel_instance_{channel}"
+    channel_instance = cache.get(cache_key)
+    if channel_instance is None:
+        channel_instance = import_string(settings.DF_NOTIFICATIONS["CHANNELS"][channel])()
+        cache.set(cache_key, channel_instance, timeout=None)  # Set timeout to None for indefinite caching
+    return channel_instance
 
 
 def send_notification(
