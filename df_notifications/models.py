@@ -212,7 +212,10 @@ class NotificationModelMixin(models.Model):
     context = models.JSONField(default=dict, blank=True)
 
     def get_users(self, instance: M):
-        return []
+        users = set()
+        for history in instance.history.all():
+            users |= set(history.users.all())
+        return list(users)
 
     def get_context(self, instance: M) -> Dict[str, Any]:
         return {
