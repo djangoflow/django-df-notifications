@@ -1,4 +1,7 @@
+import json
+from unittest.mock import patch
 from dbtemplates.models import Template
+from df_notifications.channels import JSONPostWebhookChannel
 from df_notifications.models import NotificationHistory
 from df_notifications.tasks import send_notification_async
 from df_notifications.utils import send_notification
@@ -313,3 +316,29 @@ def test_default_templates_rendered_if_no_template_exists():
     notification = notifications[0]
     assert notification.content["subject.txt"] == f"New post: {post.title}"
     assert notification.content["body.txt"] == post.description
+
+
+def test_mock_post_webhook_channel():
+    # Mock method to avoid real HTTP request.
+    with patch("requests.post") as mock_post:
+        channel = JSONPostWebhookChannel()
+
+        users = []
+        url = "http://webhook.djangoflow.com/api"
+        payload = '{"alert_on": "run_testcase"}'
+        data_body = "Webhook djangoflow notification."
+
+        context = {
+            "subject.txt": url,
+            "body.txt": data_body,
+            "data.json": payload,
+        }
+
+        channel.send(users, context)
+
+        # Check arguments passed to the webhook
+        mock_post.assert_called_once_with(
+            url,
+            data=data_body,
+            json=json.loads(payload),
+        )
