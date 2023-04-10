@@ -18,7 +18,7 @@ class BaseChannel(ABC):
     template_parts = ["subject.txt", "body.txt", "body.html", "data.json"]
 
     @abstractmethod
-    def send(self, users, context: Dict[str, str]):
+    def send(self):
         pass
 
 
