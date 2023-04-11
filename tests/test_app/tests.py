@@ -321,7 +321,7 @@ def test_json_post_webhook_channel(mock_requests_post):
     channel = JSONPostWebhookChannel()
     users = []
     context = {
-        'subject.txt': 'https://hooks.example.com/hook_endpoint',
+        'subject.txt': 'https://hooks.example.com/hook_endpoint  ',
         'body.txt': ' Web hook Test',
         'data.json': '{"notification": "Testing webhook"}'
     }
@@ -334,3 +334,22 @@ def test_json_post_webhook_channel(mock_requests_post):
             data='Web hook Test',
             json={"notification": "Testing webhook"}
         )
+
+
+@patch('df_notifications.channels.requests.post')
+def test_json_post_webhook_channel_with_invalid_context(mock_requests_post):
+    """
+        Test that an exception is raised, 
+        when seding wrong context data for JSONPostWebhookChannel
+    """
+    channel = JSONPostWebhookChannel()
+    users = []
+    context = {
+        'subject.txt': 'https://hooks.example.com/hook_endpoint',
+        'data.json': '{"notification": "Testing webhook"}'
+    }
+    
+    with pytest.raises(KeyError):
+        channel.send(users, context)
+
+    assert mock_requests_post.called is False
