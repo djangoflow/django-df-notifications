@@ -1,5 +1,6 @@
 from datetime import timedelta
 from df_notifications.fields import NoMigrationsChoicesField
+from df_notifications.settings import api_settings
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.fields import GenericRelation
@@ -99,7 +100,7 @@ class NotificationHistory(models.Model):
     created = models.DateTimeField(auto_now_add=True, db_index=True)
     channel = NoMigrationsChoicesField(
         max_length=255,
-        choices=[(key, key) for key in settings.DF_NOTIFICATIONS["CHANNELS"]],
+        choices=[(key, key) for key in api_settings.CHANNELS],
     )
     template_prefix = models.CharField(max_length=255)
     content = models.JSONField(default=dict, blank=True)
@@ -206,7 +207,7 @@ class NotificationModelMixin(models.Model):
     history = models.ManyToManyField(NotificationHistory, blank=True, editable=False)
     channel = NoMigrationsChoicesField(
         max_length=255,
-        choices=[(key, key) for key in settings.DF_NOTIFICATIONS["CHANNELS"]],
+        choices=[(key, key) for key in api_settings.CHANNELS],
     )
     template_prefix = models.CharField(max_length=255)
     context = models.JSONField(default=dict, blank=True)
