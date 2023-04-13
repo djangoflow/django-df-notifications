@@ -1,4 +1,8 @@
+from json import JSONDecodeError
+from unittest import TestCase
+from unittest.mock import patch
 from dbtemplates.models import Template
+from df_notifications.channels import JSONPostWebhookChannel
 from df_notifications.models import NotificationHistory
 from df_notifications.tasks import send_notification_async
 from df_notifications.utils import send_notification
@@ -313,3 +317,63 @@ def test_default_templates_rendered_if_no_template_exists():
     notification = notifications[0]
     assert notification.content["subject.txt"] == f"New post: {post.title}"
     assert notification.content["body.txt"] == post.description
+
+
+class TestJSONPostWebhookChannel(TestCase):
+    def test_throws_type_error_if_missing_context(self):
+        channel = JSONPostWebhookChannel()
+        with self.assertRaises(TypeError):
+            channel.send(None, None)
+
+    def test_throws_key_error_if_missing_data_json(self):
+        channel = JSONPostWebhookChannel()
+        context = {
+            "subject.txt": "https://example.com/webhook",
+            "body.txt": "content"
+        }
+        with self.assertRaises(KeyError):
+            channel.send(None, context)
+
+    def test_throws_key_error_if_missing_body_txt(self):
+        channel = JSONPostWebhookChannel()
+        context = {
+            "subject.txt": "https://example.com/webhook",
+            "data.json": '{"type": "new"}'
+        }
+        with self.assertRaises(KeyError):
+            channel.send(None, context)
+
+    def test_throws_key_error_if_missing_subject(self):
+        channel = JSONPostWebhookChannel()
+        context = {
+            "body.txt": "content",
+            "data.json": '{"type": "new"}'
+        }
+        with self.assertRaises(KeyError):
+            channel.send(None, context)
+
+    def test_throws_json_decode_error_invalid_data_json(self):
+        channel = JSONPostWebhookChannel()
+        context = {
+            "subject.txt": "https://example.com/webhook",
+            "body.txt": "content",
+            "data.json": '{"type": "new"'
+        }
+        with self.assertRaises(JSONDecodeError):
+            channel.send(None, context)
+
+    @patch("df_notifications.channels.requests.post")
+    def test_post_sent(self, mock_request):
+        channel = JSONPostWebhookChannel()
+        context = {
+            "subject.txt": "https://example.com/webhook ",
+            "body.txt": " content ",
+            "data.json": '{"type": "new"}'
+        }
+        channel.send(None, context)
+
+        mock_request.assert_called_once_with(
+            "https://example.com/webhook",
+            data="content",
+            json={"type": "new"}
+        )
