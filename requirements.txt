@@ -11,3 +11,4 @@ pytest
 pytest-django
 django-dbtemplates
 django-otp-twilio
+requests_mock
