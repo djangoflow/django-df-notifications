@@ -135,7 +135,7 @@ class SlackChannel(BaseChannel):
 
     def send(self, users, context: Dict[str, str]):
         slack_message(
-            template_name_or_message="df_notifications/base_slack.html",
+            template="df_notifications/base_slack.html",
             context=context,
             attachments=[
                 {"title": context["subject.txt"], "text": context["body.txt"]}
