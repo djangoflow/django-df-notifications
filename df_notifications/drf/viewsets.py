@@ -14,7 +14,7 @@ class UserDeviceViewSet(FCMDeviceAuthorizedViewSet):
 
 
 class PushActionCategoryViewSet(ListModelMixin, GenericViewSet):
-    queryset = PushActionCategory.objects.filter(is_active=True)
+    queryset = PushActionCategory.objects.prefetch_related("actions").filter(is_active=True)
     permission_classes = (permissions.AllowAny,)
     serializer_class = PushActionCategorySerializer
     pagination_class = None
