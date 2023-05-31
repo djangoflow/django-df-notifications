@@ -73,7 +73,11 @@ pip install -r requirements.txt
 ### Running tests
 
 ```
+# Without coverage report
 make test
+
+# With coverage report
+make test-cov
 ```
 
 
