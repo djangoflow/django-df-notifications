@@ -10,11 +10,15 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 from import_export.admin import ImportExportMixin
 from import_export.resources import ModelResource
+from django.core.exceptions import ObjectDoesNotExist
 
 
 def save_previous_instance(sender, instance, **kwargs):
     if instance.pk:
-        instance._pre_save_instance = sender.objects.get(pk=instance.pk)
+        try:
+            instance._pre_save_instance = sender.objects.get(pk=instance.pk)
+        except ObjectDoesNotExist:
+            instance._pre_save_instance = None
     else:
         instance._pre_save_instance = None
 

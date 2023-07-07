@@ -1,7 +1,6 @@
 from datetime import timedelta
 from df_notifications.fields import NoMigrationsChoicesField
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
@@ -25,7 +24,7 @@ from typing import TypeVar
 
 M = TypeVar("M", bound=models.Model)
 
-User = get_user_model()
+User = settings.AUTH_USER_MODEL
 
 # https://code.djangoproject.com/ticket/33174
 if TYPE_CHECKING:
@@ -183,7 +182,7 @@ class NotificationModelMixin(models.Model):
     template_prefix = models.CharField(max_length=255)
     context = models.JSONField(default=dict, blank=True)
 
-    def get_users(self, instance: M) -> List[User]:
+    def get_users(self, instance: M) -> List[models.Model]:
         return []
 
     def get_context(self, instance: M) -> Dict[str, Any]:
@@ -214,7 +213,7 @@ class NotificationModelMixin(models.Model):
 
 
 class AsyncNotificationModelMixin(NotificationModelMixin):
-    def send(self, instance: M) -> User:
+    def send(self, instance: M) -> models.Model:
         from .tasks import send_model_notification_async
 
         transaction.on_commit(
