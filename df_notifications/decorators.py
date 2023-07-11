@@ -1,6 +1,7 @@
 from df_notifications.models import NotificationModelMixin
 from df_notifications.utils import get_channel_instance
 from django.contrib import admin
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models.signals import post_save
 from django.db.models.signals import pre_save
@@ -14,7 +15,10 @@ from import_export.resources import ModelResource
 
 def save_previous_instance(sender, instance, **kwargs):
     if instance.pk:
-        instance._pre_save_instance = sender.objects.get(pk=instance.pk)
+        try:
+            instance._pre_save_instance = sender.objects.get(pk=instance.pk)
+        except ObjectDoesNotExist:
+            instance._pre_save_instance = None
     else:
         instance._pre_save_instance = None
 
