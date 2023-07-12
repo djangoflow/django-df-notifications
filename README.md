@@ -1,21 +1,9 @@
-=======================================
-Djangoflow Omnichannel Notifications
-=======================================
+# Djangoflow Omnichannel Notifications
 
 Opinionated Django Omnichannel Notifications
 
 
-
-
-
-------
-Design
-------
-
-...
-
-Principles
-----------
+## Principles
 
 * **Opinionated:** Create a set of strict guidelines to be followed by the users
   and developers. Well defined and consistent guidelines reduces errors and
@@ -38,19 +26,16 @@ Principles
 
 * **Reuse:** Do not reinvent the wheel. Use existing high-quality modules as much as possible.
 
-Endpoints
----------
+## Endpoints
 
 * `devices/`
 * `action-categories/`
 
-Data model
-----------
+## Data model
 
 ...
 
-Views and templates
--------------------
+## Views and templates
 
 ...
 
@@ -95,7 +80,7 @@ git push --tags
 
 ...
 
-Sponsors
-========
+## Sponsors
+
 
 [Apexive OSS](https://apexive.com)
