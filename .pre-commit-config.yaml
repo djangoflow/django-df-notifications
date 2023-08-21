@@ -19,17 +19,11 @@ repos:
     hooks:
       - id: ruff
 
-#  - repo: https://github.com/pre-commit/mirrors-mypy
-#    rev: v1.5.0
-#    hooks:
-#      - id: mypy
-#        additional_dependencies:
-#          - django-stubs
-#          - djangorestframework
-#          - fcm_django
-#          - django_slack
-#          - types-requests
-#          - types-urllib3
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.4.1
+    hooks:
+      - id: mypy
+        language: system
 
 # sets up .pre-commit-ci.yaml to ensure pre-commit dependencies stay up to date
 ci:

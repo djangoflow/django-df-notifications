@@ -50,7 +50,7 @@ Here you can check admin and API endpoints.
 ```
 python3 -m venv venv
 . venv/bin/activate
-pip install -r requirements.txt
+pip install -e .[test]
 ./manage.py runserver
 ```
 

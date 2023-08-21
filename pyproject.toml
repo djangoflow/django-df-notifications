@@ -41,12 +41,13 @@ dependencies = [
 test = [
     "pytest",
     "pytest-django",
-    "django-stubs",
-    "mypy==1.5.1",
+    "django-stubs[compatible-mypy]",
     "black==23.7.0",
     "ruff==0.0.284",
     "types-requests",
-    "types-urllib3"
+    "types-urllib3",
+    "django-dbtemplates",
+    "pytest-cov",
 ]
 
 [build-system]
