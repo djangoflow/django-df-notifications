@@ -106,7 +106,7 @@ target-version = "py39"
 
 [tool.mypy]
 ignore_missing_imports = true
-disable_error_code = ["attr-defined", "valid-type"]
+disable_error_code = "attr-defined, valid-type"
 disallow_untyped_defs = true
 mypy_path = "df_notifications"
 exclude = "venv|migrations|build|dist|docs"
