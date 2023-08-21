@@ -1,5 +1,6 @@
-from django.db.models import TextField
 from typing import Any
+
+from django.db.models import TextField
 
 
 class NoMigrationsChoicesField(TextField):

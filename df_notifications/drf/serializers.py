@@ -1,8 +1,7 @@
-from df_notifications.models import PushAction
-from df_notifications.models import PushActionCategory
-from df_notifications.models import UserDevice
 from fcm_django.api.rest_framework import FCMDeviceSerializer
 from rest_framework import serializers
+
+from df_notifications.models import PushAction, PushActionCategory, UserDevice
 
 
 class UserDeviceSerializer(FCMDeviceSerializer):

@@ -1,16 +1,19 @@
-from df_notifications.decorators import register_reminder_model
-from df_notifications.decorators import register_rule_model
-from df_notifications.models import NotifiableModelMixin
-from df_notifications.models import NotificationModelReminder
-from df_notifications.models import NotificationModelRule
+import json
+from typing import List, Optional
+
 from django.contrib.auth.models import User
 from django.db import models
-from django.db.models import Q
-from django.db.models import QuerySet
-from typing import List
-from typing import Optional
+from django.db.models import Q, QuerySet
 
-import json
+from df_notifications.decorators import (
+    register_reminder_model,
+    register_rule_model,
+)
+from df_notifications.models import (
+    NotifiableModelMixin,
+    NotificationModelReminder,
+    NotificationModelRule,
+)
 
 
 class Post(NotifiableModelMixin):

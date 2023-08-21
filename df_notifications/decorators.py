@@ -1,10 +1,7 @@
-from df_notifications.models import NotificationModelMixin
-from df_notifications.utils import get_channel_instance
 from django.contrib import admin
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.db.models.signals import post_save
-from django.db.models.signals import pre_save
+from django.db.models.signals import post_save, pre_save
 from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
 from django.urls import reverse
@@ -12,8 +9,11 @@ from django.utils.safestring import mark_safe
 from import_export.admin import ImportExportMixin
 from import_export.resources import ModelResource
 
+from df_notifications.models import NotificationModelMixin, NotificationModelRule
+from df_notifications.utils import get_channel_instance
 
-def save_previous_instance(sender, instance, **kwargs):
+
+def save_previous_instance(sender, instance, **kwargs) -> None:
     if instance.pk:
         try:
             instance._pre_save_instance = sender.objects.get(pk=instance.pk)
@@ -23,7 +23,7 @@ def save_previous_instance(sender, instance, **kwargs):
         instance._pre_save_instance = None
 
 
-def create_proxy_model(model_class):
+def create_proxy_model(model_class) -> type:
     return type(
         model_class.__name__,
         (model_class,),
@@ -39,13 +39,13 @@ def register_notification_model_admin(model_class):
 
     @admin.register(ProxyModel)
     class AdminProxyModel(ImportExportMixin, admin.ModelAdmin):
-        def get_list_display(self, request):
+        def get_list_display(self, request) -> tuple:
             return (
                 *model_class.admin_list_display,
                 "content",
             )
 
-        def get_resource_classes(self):
+        def get_resource_classes(self) -> list:
             class ProxyModelResource(ModelResource):
                 class Meta:
                     model = model_class
@@ -61,7 +61,7 @@ def register_notification_model_admin(model_class):
         @admin.action(
             description="Initialize DB Templates for notifications (override current content)"
         )
-        def populate(self, request, qs):
+        def populate(self, request, qs) -> None:
             from dbtemplates.models import Template
 
             for item in qs:
@@ -85,7 +85,7 @@ def register_notification_model_admin(model_class):
         actions = [populate]
 
 
-def register_rule_model(rule_class):
+def register_rule_model(rule_class) -> "NotificationModelRule":
     pre_save.connect(
         save_previous_instance,
         rule_class.model,
@@ -93,7 +93,7 @@ def register_rule_model(rule_class):
         dispatch_uid="save_previous_instance",
     )
 
-    def apply_action(sender, instance, **kwargs):
+    def apply_action(sender, instance, **kwargs) -> None:
         rule_class.invoke(instance)
 
     post_save.connect(apply_action, rule_class.model, weak=False)

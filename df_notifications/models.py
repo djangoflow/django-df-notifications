@@ -1,26 +1,28 @@
 from datetime import timedelta
-from df_notifications.fields import NoMigrationsChoicesField
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Generic,
+    List,
+    Optional,
+    Type,
+    TypeVar,
+)
+
 from django.conf import settings
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.contenttypes.fields import (
+    GenericForeignKey,
+    GenericRelation,
+)
 from django.contrib.contenttypes.models import ContentType
-from django.db import models
-from django.db import transaction
-from django.db.models import Count
-from django.db.models import Q
-from django.db.models import QuerySet
+from django.db import models, transaction
+from django.db.models import Count, Q, QuerySet
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from fcm_django.models import AbstractFCMDevice
-from typing import Any
-from typing import Dict
-from typing import Generic
-from typing import List
-from typing import Optional
-from typing import Type
-from typing import TYPE_CHECKING
-from typing import TypeVar
 
+from df_notifications.fields import NoMigrationsChoicesField
 
 M = TypeVar("M", bound=models.Model)
 
@@ -38,12 +40,12 @@ else:
 
 
 class UserDevice(AbstractFCMDevice):
-    user = models.ForeignKey(
+    user = models.ForeignKey(  # type: ignore
         settings.AUTH_USER_MODEL,
         blank=True,
         null=True,
         on_delete=models.CASCADE,
-        related_query_name=_("fcmdevice"),
+        related_query_name=_("fcmdevice"),  # type: ignore
     )
 
     class Meta:
@@ -55,7 +57,7 @@ class PushActionCategory(models.Model):
     name = models.CharField(max_length=64, unique=True, verbose_name="id")
     is_active = models.BooleanField(default=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
     class Meta:
@@ -78,7 +80,7 @@ class PushAction(models.Model):
     class Meta:
         ordering = ["category", "sequence"]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
@@ -86,7 +88,7 @@ class PushAction(models.Model):
 
 
 class NotificationHistoryQuerySet(models.QuerySet):
-    def for_instance(self, instance: M):
+    def for_instance(self, instance: M) -> models.QuerySet:
         return self.filter(
             instance_id=instance.pk,
             content_type=ContentType.objects.get_for_model(instance).id,
@@ -137,7 +139,7 @@ class BaseModelRule(GenericBase[M], models.Model):
     tracking_fields: Optional[List[str]] = None
 
     @classmethod
-    def is_field_changed(cls, instance: M, prev: Optional[M]):
+    def is_field_changed(cls, instance: M, prev: Optional[M]) -> bool:
         if cls.tracking_fields is None or prev is None:
             return True
 
@@ -154,11 +156,11 @@ class BaseModelRule(GenericBase[M], models.Model):
     def check_condition(self, instance: M, prev: Optional[M]) -> bool:
         return True
 
-    def perform_action(self, instance: M):
+    def perform_action(self, instance: M) -> None:
         pass
 
     @classmethod
-    def invoke(cls, instance: M):
+    def invoke(cls, instance: M) -> None:
         prev = getattr(instance, "_pre_save_instance", None)
 
         if not cls.is_field_changed(instance, prev):
@@ -185,11 +187,11 @@ class BaseModelReminder(GenericBase[M], models.Model):
     def check_condition(self, instance: M) -> bool:
         return True
 
-    def perform_action(self, instance: M):
+    def perform_action(self, instance: M) -> None:
         pass
 
     @classmethod
-    def invoke(cls):
+    def invoke(cls) -> None:
         for reminder in cls.get_queryset():
             for instance in reminder.get_model_queryset():
                 if reminder.check_condition(instance):
@@ -211,7 +213,7 @@ class NotificationModelMixin(models.Model):
     template_prefix = models.CharField(max_length=255)
     context = models.JSONField(default=dict, blank=True)
 
-    def get_users(self, instance: M):
+    def get_users(self, instance: M) -> list:
         return []
 
     def get_context(self, instance: M) -> Dict[str, Any]:
@@ -220,17 +222,17 @@ class NotificationModelMixin(models.Model):
             "instance": instance,
         }
 
-    def get_template_prefixes(self):
+    def get_template_prefixes(self) -> list:
         return [
             self.template_prefix,
             f"{self.model._meta.app_label}/df_notifications/{self.model._meta.model_name}/",
         ]
 
-    def send(self, instance: M):
+    def send(self, instance: M) -> None:
         from .utils import send_notification
 
         notification = send_notification(
-            self.get_users(instance),
+            self.get_users(instance),  # type: ignore
             self.channel,
             self.get_template_prefixes(),
             self.get_context(instance),
@@ -242,7 +244,7 @@ class NotificationModelMixin(models.Model):
 
 
 class AsyncNotificationModelMixin(NotificationModelMixin):
-    def send(self, instance: M):
+    def send(self, instance: M) -> None:
         from .tasks import send_model_notification_async
 
         transaction.on_commit(
@@ -258,7 +260,7 @@ class AsyncNotificationModelMixin(NotificationModelMixin):
 
 
 class NotificationModelRule(NotificationModelMixin, BaseModelRule):
-    def perform_action(self, instance: M):
+    def perform_action(self, instance: M) -> None:
         self.send(instance)
 
     class Meta:
@@ -305,7 +307,7 @@ class NotificationModelReminder(NotificationModelMixin, BaseModelReminder):
             .distinct()
         )
 
-    def perform_action(self, instance: M):
+    def perform_action(self, instance: M) -> None:
         self.send(instance)
         if self.action:
             exec(self.action)
