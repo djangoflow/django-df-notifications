@@ -9,62 +9,124 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('df_notifications', '0001_initial'),
+        ("df_notifications", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='PostNotificationRule',
+            name="PostNotificationRule",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('channel', df_notifications.fields.NoMigrationsChoicesField(max_length=255)),
-                ('template_prefix', models.CharField(max_length=255)),
-                ('context', models.JSONField(blank=True, default=dict)),
-                ('is_published_prev', models.BooleanField(default=False)),
-                ('is_published_next', models.BooleanField(default=True)),
-                ('history', models.ManyToManyField(blank=True, to='df_notifications.notificationhistory')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "channel",
+                    df_notifications.fields.NoMigrationsChoicesField(max_length=255),
+                ),
+                ("template_prefix", models.CharField(max_length=255)),
+                ("context", models.JSONField(blank=True, default=dict)),
+                ("is_published_prev", models.BooleanField(default=False)),
+                ("is_published_next", models.BooleanField(default=True)),
+                (
+                    "history",
+                    models.ManyToManyField(
+                        blank=True, to="df_notifications.notificationhistory"
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
             bases=(df_notifications.models.GenericBase, models.Model),
         ),
         migrations.CreateModel(
-            name='PostNotificationReminder',
+            name="PostNotificationReminder",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('channel', df_notifications.fields.NoMigrationsChoicesField(max_length=255)),
-                ('template_prefix', models.CharField(max_length=255)),
-                ('context', models.JSONField(blank=True, default=dict)),
-                ('delay', models.DurationField(default=datetime.timedelta(0), help_text='Send the reminder after this period of time')),
-                ('cooldown', models.DurationField(default=datetime.timedelta(seconds=3600), help_text='Wait so much time before reminding again')),
-                ('repeat', models.SmallIntegerField(default=1, help_text='Repeat the reminder this many times')),
-                ('is_published', models.BooleanField(default=True)),
-                ('history', models.ManyToManyField(blank=True, to='df_notifications.notificationhistory')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "channel",
+                    df_notifications.fields.NoMigrationsChoicesField(max_length=255),
+                ),
+                ("template_prefix", models.CharField(max_length=255)),
+                ("context", models.JSONField(blank=True, default=dict)),
+                (
+                    "delay",
+                    models.DurationField(
+                        default=datetime.timedelta(0),
+                        help_text="Send the reminder after this period of time",
+                    ),
+                ),
+                (
+                    "cooldown",
+                    models.DurationField(
+                        default=datetime.timedelta(seconds=3600),
+                        help_text="Wait so much time before reminding again",
+                    ),
+                ),
+                (
+                    "repeat",
+                    models.SmallIntegerField(
+                        default=1, help_text="Repeat the reminder this many times"
+                    ),
+                ),
+                ("is_published", models.BooleanField(default=True)),
+                (
+                    "history",
+                    models.ManyToManyField(
+                        blank=True, to="df_notifications.notificationhistory"
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
             bases=(df_notifications.models.GenericBase, models.Model),
         ),
         migrations.CreateModel(
-            name='Post',
+            name="Post",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=255)),
-                ('description', models.TextField()),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('updated', models.DateTimeField(auto_now=True)),
-                ('is_published', models.BooleanField(default=False)),
-                ('author', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("title", models.CharField(max_length=255)),
+                ("description", models.TextField()),
+                ("created", models.DateTimeField(auto_now_add=True)),
+                ("updated", models.DateTimeField(auto_now=True)),
+                ("is_published", models.BooleanField(default=False)),
+                (
+                    "author",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
     ]
