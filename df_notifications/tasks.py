@@ -1,3 +1,5 @@
+# type: ignore
+
 from typing import Any, Dict, List, Type, Union
 
 from celery import current_app as app
@@ -42,6 +44,6 @@ def send_notification_async(
     template_prefixes: Union[List[str], str],
     context: Dict[str, Any],
 ) -> None:
-    User = get_user_model()
+    User = get_user_model()  # type: ignore
     users = User.objects.filter(id__in=user_ids)
     send_notification(users, channel_name, template_prefixes, context)

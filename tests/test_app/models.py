@@ -1,5 +1,5 @@
 import json
-from typing import List, Optional
+from typing import List, Optional, TypeVar
 
 from django.contrib.auth.models import User
 from django.db import models
@@ -15,6 +15,8 @@ from df_notifications.models import (
     NotificationModelRule,
 )
 
+M = TypeVar("M", bound=models.Model)
+
 
 class Post(NotifiableModelMixin):
     title = models.CharField(max_length=255)
@@ -24,7 +26,7 @@ class Post(NotifiableModelMixin):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     is_published = models.BooleanField(default=False)
 
-    def json_data(self):
+    def json_data(self) -> str:
         return json.dumps(
             {
                 "title": self.title,
@@ -48,7 +50,7 @@ class PostNotificationRule(NotificationModelRule):
     is_published_prev = models.BooleanField(default=False, null=True)
     is_published_next = models.BooleanField(default=True)
 
-    def get_users(self, instance: Post) -> List[User]:
+    def get_users(self, instance: M) -> list:
         return [instance.author]
 
     @classmethod
@@ -84,5 +86,5 @@ class PostNotificationReminder(NotificationModelReminder):
 
     is_published = models.BooleanField(default=True)
 
-    def get_users(self, instance: Post) -> List[User]:
+    def get_users(self, instance: M) -> List[User]:
         return [instance.author]
