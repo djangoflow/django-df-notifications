@@ -39,6 +39,7 @@ dependencies = [
 
 [project.optional-dependencies]
 test = [
+    "django-df-api-drf",
     "pytest",
     "pytest-django",
     "django-stubs[compatible-mypy]",
@@ -52,7 +53,7 @@ test = [
 
 [build-system]
 requires = ['setuptools>=68.1.0', 'wheel']
-build-backend = 'setuptools.build_meta:__legacy__'
+build-backend = 'setuptools.build_meta'
 
 [tool.setuptools]
 include-package-data = true

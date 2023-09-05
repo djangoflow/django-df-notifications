@@ -4,17 +4,17 @@ from typing import Any, Dict, List, Type, Union
 
 from celery import current_app as app
 from django.apps import apps
-from django.conf import settings
 from django.contrib.auth import get_user_model
 
 from df_notifications.models import BaseModelReminder, NotificationModelMixin
+from df_notifications.settings import api_settings
 from df_notifications.utils import send_notification
 
 
 @app.on_after_finalize.connect
 def setup_periodic_tasks(sender: Any, **kwargs: Any) -> None:
     sender.add_periodic_task(
-        settings.DF_NOTIFICATIONS["REMINDERS_CHECK_PERIOD"], register_reminders.s()
+        api_settings.REMINDERS_CHECK_PERIOD, register_reminders.s()
     )
 
 

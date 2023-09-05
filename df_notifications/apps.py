@@ -12,10 +12,5 @@ class DFNotificationsConfig(AppConfig):
         except ImportError:
             pass
 
-    class Djangoflow:
-        required_apps = [
-            "df_notifications",
-            "fcm_django",
-            "django_slack",
-        ]
+    class DFMeta:
         api_path = "notifications/"
