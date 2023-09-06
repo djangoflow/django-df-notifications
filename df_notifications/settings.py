@@ -1,7 +1,6 @@
 from django.conf import settings
 from rest_framework.settings import APISettings
 
-
 DEFAULTS = {
     "CHANNELS": {
         "email": "df_notifications.channels.EmailChannel",
@@ -16,7 +15,7 @@ DEFAULTS = {
     "REMINDERS_CHECK_PERIOD": 60,
 }
 
-IMPORT_STRINGS = []
+IMPORT_STRINGS: list = []
 
 api_settings = APISettings(
     getattr(settings, "DF_NOTIFICATIONS", None), DEFAULTS, IMPORT_STRINGS

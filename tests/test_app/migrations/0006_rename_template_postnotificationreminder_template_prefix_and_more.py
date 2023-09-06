@@ -4,20 +4,22 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('test_app', '0005_rename_template_prefix_postnotificationreminder_template_and_more'),
+        (
+            "test_app",
+            "0005_rename_template_prefix_postnotificationreminder_template_and_more",
+        ),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='postnotificationreminder',
-            old_name='template',
-            new_name='template_prefix',
+            model_name="postnotificationreminder",
+            old_name="template",
+            new_name="template_prefix",
         ),
         migrations.RenameField(
-            model_name='postnotificationrule',
-            old_name='template',
-            new_name='template_prefix',
+            model_name="postnotificationrule",
+            old_name="template",
+            new_name="template_prefix",
         ),
     ]

@@ -4,21 +4,24 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('df_notifications', '0001_initial'),
-        ('test_app', '0001_initial'),
+        ("df_notifications", "0001_initial"),
+        ("test_app", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='postnotificationreminder',
-            name='history',
-            field=models.ManyToManyField(blank=True, editable=False, to='df_notifications.notificationhistory'),
+            model_name="postnotificationreminder",
+            name="history",
+            field=models.ManyToManyField(
+                blank=True, editable=False, to="df_notifications.notificationhistory"
+            ),
         ),
         migrations.AlterField(
-            model_name='postnotificationrule',
-            name='history',
-            field=models.ManyToManyField(blank=True, editable=False, to='df_notifications.notificationhistory'),
+            model_name="postnotificationrule",
+            name="history",
+            field=models.ManyToManyField(
+                blank=True, editable=False, to="df_notifications.notificationhistory"
+            ),
         ),
     ]

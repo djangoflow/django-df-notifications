@@ -1,3 +1,121 @@
+[project]
+name = "django-df-notifications"
+description = "Opinionated Django Omnichannel Notifications."
+readme = "README.md"
+version = "1.1.14"
+authors = [
+    { name = "Apexive OSS", email = "open-source@apexive.com" },
+]
+classifiers = [
+    "Environment :: Web Environment",
+    "Framework :: Django",
+    "Framework :: Django :: 3.2",
+    "Framework :: Django :: 4.0",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Topic :: Internet",
+]
+requires-python = ">=3.9"
+urls = { homepage = "https://apexive.com/" }
+
+dependencies = [
+    "django",
+    "djangorestframework",
+    "firebase_admin",
+    "requests",
+    "django_slack",
+    "fcm_django",
+    "celery",
+    "django-import-export",
+    "django-celery-beat",
+    "django-otp-twilio"
+]
+
+[project.optional-dependencies]
+test = [
+    "django-df-api-drf",
+    "pytest",
+    "pytest-django",
+    "django-stubs[compatible-mypy]",
+    "black==23.7.0",
+    "ruff==0.0.284",
+    "types-requests",
+    "types-urllib3",
+    "django-dbtemplates",
+    "pytest-cov",
+]
+
 [build-system]
-requires = ['setuptools>=40.8.0', 'wheel']
-build-backend = 'setuptools.build_meta:__legacy__'
+requires = ['setuptools>=68.1.0', 'wheel']
+build-backend = 'setuptools.build_meta'
+
+[tool.setuptools]
+include-package-data = true
+packages = ["df_notifications"]
+
+[tool.pycodestyle]
+max-line-length = 160
+exclude = [".tox", ".git", "*/migrations/*", "*/static/CACHE/*", "docs", "node_modules", "venv"]
+
+[tool.black]
+max-line-length = 160
+
+[tool.ruff]
+line-length = 160
+fix = true
+ignore = ["S113", "S308", "S102", "S105", "B008", "E501", "S101", "A003"]
+select = ["E", "F", "I", "W", "A", "B", "Q", "C", "S"]
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    'static',
+    'migrations',
+    '__pycache__',
+    '.pytest_cache',
+    '__init__.py',
+]
+per-file-ignores = {}
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+# Assume Python 3.9.x
+target-version = "py39"
+
+[tool.mypy]
+ignore_missing_imports = true
+disable_error_code = "attr-defined, valid-type"
+disallow_untyped_defs = true
+mypy_path = "df_notifications"
+exclude = "venv|migrations|build|dist|docs"
+plugins = ["mypy_django_plugin.main"]
+
+[tool.django-stubs]
+django_settings_module = "tests.settings"
+
+[tool.pytest.ini_options]
+python_files = "tests.py test_*.py"
+DJANGO_SETTINGS_MODULE = "tests.settings"
