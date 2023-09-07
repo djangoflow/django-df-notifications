@@ -1,3 +1,9 @@
+from df_api_drf.defaults import DF_API_DRF_INSTALLED_APPS
+from df_api_drf.defaults import REST_FRAMEWORK
+from df_api_drf.defaults import SPECTACULAR_SETTINGS
+from df_notifications.defaults import DF_NOTIFICATIONS_INSTALLED_APPS
+
+
 DEBUG = True
 
 ROOT_URLCONF = "tests.urls"
@@ -13,10 +19,8 @@ INSTALLED_APPS = [
     "django.contrib.sites",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "rest_framework",
-    "fcm_django",
-    "df_notifications",
-    "django_slack",
+    *DF_API_DRF_INSTALLED_APPS,
+    *DF_NOTIFICATIONS_INSTALLED_APPS,
     "import_export",
     "tests.test_app.apps.TestAppConfig",
     "dbtemplates",
@@ -100,3 +104,9 @@ DF_NOTIFICATIONS = {
     "SAVE_HISTORY_CONTENT": True,
     "REMINDERS_CHECK_PERIOD": 5,
 }
+
+REST_FRAMEWORK = dict(REST_FRAMEWORK)
+REST_FRAMEWORK.pop("DEFAULT_AUTHENTICATION_CLASSES")
+REST_FRAMEWORK.pop("DEFAULT_PERMISSION_CLASSES")
+
+SPECTACULAR_SETTINGS = dict(SPECTACULAR_SETTINGS)
