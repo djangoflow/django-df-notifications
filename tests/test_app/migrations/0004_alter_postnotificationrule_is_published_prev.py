@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('test_app', '0003_postnotificationreminder_action'),
+        ("test_app", "0003_postnotificationreminder_action"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='postnotificationrule',
-            name='is_published_prev',
+            model_name="postnotificationrule",
+            name="is_published_prev",
             field=models.BooleanField(default=False, null=True),
         ),
     ]

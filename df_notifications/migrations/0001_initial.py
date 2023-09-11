@@ -7,58 +7,136 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('contenttypes', '0002_remove_content_type_name'),
+        ("contenttypes", "0002_remove_content_type_name"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='UserDevice',
+            name="UserDevice",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(blank=True, max_length=255, null=True, verbose_name='Name')),
-                ('active', models.BooleanField(default=True, help_text='Inactive devices will not be sent notifications', verbose_name='Is active')),
-                ('date_created', models.DateTimeField(auto_now_add=True, null=True, verbose_name='Creation date')),
-                ('device_id', models.CharField(blank=True, db_index=True, help_text='Unique device identifier', max_length=255, null=True, verbose_name='Device ID')),
-                ('registration_id', models.TextField(verbose_name='Registration token')),
-                ('type', models.CharField(choices=[('ios', 'ios'), ('android', 'android'), ('web', 'web')], max_length=10)),
-                ('user', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_query_name='fcmdevice', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        blank=True, max_length=255, null=True, verbose_name="Name"
+                    ),
+                ),
+                (
+                    "active",
+                    models.BooleanField(
+                        default=True,
+                        help_text="Inactive devices will not be sent notifications",
+                        verbose_name="Is active",
+                    ),
+                ),
+                (
+                    "date_created",
+                    models.DateTimeField(
+                        auto_now_add=True, null=True, verbose_name="Creation date"
+                    ),
+                ),
+                (
+                    "device_id",
+                    models.CharField(
+                        blank=True,
+                        db_index=True,
+                        help_text="Unique device identifier",
+                        max_length=255,
+                        null=True,
+                        verbose_name="Device ID",
+                    ),
+                ),
+                (
+                    "registration_id",
+                    models.TextField(verbose_name="Registration token"),
+                ),
+                (
+                    "type",
+                    models.CharField(
+                        choices=[
+                            ("ios", "ios"),
+                            ("android", "android"),
+                            ("web", "web"),
+                        ],
+                        max_length=10,
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_query_name="fcmdevice",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'User device',
-                'verbose_name_plural': 'User devices',
+                "verbose_name": "User device",
+                "verbose_name_plural": "User devices",
             },
         ),
         migrations.CreateModel(
-            name='NotificationHistory',
+            name="NotificationHistory",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('created', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('channel', df_notifications.fields.NoMigrationsChoicesField(max_length=255)),
-                ('template_prefix', models.CharField(max_length=255)),
-                ('content', models.JSONField(blank=True, default=dict)),
-                ('instance_id', models.PositiveBigIntegerField(blank=True, null=True)),
-                ('content_type', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='contenttypes.contenttype')),
-                ('users', models.ManyToManyField(blank=True, to=settings.AUTH_USER_MODEL)),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                ("created", models.DateTimeField(auto_now_add=True, db_index=True)),
+                (
+                    "channel",
+                    df_notifications.fields.NoMigrationsChoicesField(max_length=255),
+                ),
+                ("template_prefix", models.CharField(max_length=255)),
+                ("content", models.JSONField(blank=True, default=dict)),
+                ("instance_id", models.PositiveBigIntegerField(blank=True, null=True)),
+                (
+                    "content_type",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="contenttypes.contenttype",
+                    ),
+                ),
+                (
+                    "users",
+                    models.ManyToManyField(blank=True, to=settings.AUTH_USER_MODEL),
+                ),
             ],
             options={
-                'verbose_name_plural': 'Notification history',
+                "verbose_name_plural": "Notification history",
             },
         ),
         migrations.AddIndex(
-            model_name='notificationhistory',
-            index=models.Index(fields=['template_prefix', 'created'], name='df_notifica_templat_fc63aa_idx'),
+            model_name="notificationhistory",
+            index=models.Index(
+                fields=["template_prefix", "created"],
+                name="df_notifica_templat_fc63aa_idx",
+            ),
         ),
         migrations.AddIndex(
-            model_name='notificationhistory',
-            index=models.Index(fields=['channel', 'created'], name='df_notifica_channel_ecbe66_idx'),
+            model_name="notificationhistory",
+            index=models.Index(
+                fields=["channel", "created"], name="df_notifica_channel_ecbe66_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='notificationhistory',
-            index=models.Index(fields=['content_type', 'instance_id', 'created'], name='df_notifica_content_1618f4_idx'),
+            model_name="notificationhistory",
+            index=models.Index(
+                fields=["content_type", "instance_id", "created"],
+                name="df_notifica_content_1618f4_idx",
+            ),
         ),
     ]

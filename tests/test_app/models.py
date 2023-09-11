@@ -1,16 +1,21 @@
-from df_notifications.decorators import register_reminder_model
-from df_notifications.decorators import register_rule_model
-from df_notifications.models import NotifiableModelMixin
-from df_notifications.models import NotificationModelReminder
-from df_notifications.models import NotificationModelRule
+import json
+from typing import List, Optional, TypeVar
+
 from django.contrib.auth.models import User
 from django.db import models
-from django.db.models import Q
-from django.db.models import QuerySet
-from typing import List
-from typing import Optional
+from django.db.models import Q, QuerySet
 
-import json
+from df_notifications.decorators import (
+    register_reminder_model,
+    register_rule_model,
+)
+from df_notifications.models import (
+    NotifiableModelMixin,
+    NotificationModelReminder,
+    NotificationModelRule,
+)
+
+M = TypeVar("M", bound=models.Model)
 
 
 class Post(NotifiableModelMixin):
@@ -21,7 +26,7 @@ class Post(NotifiableModelMixin):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     is_published = models.BooleanField(default=False)
 
-    def json_data(self):
+    def json_data(self) -> str:
         return json.dumps(
             {
                 "title": self.title,
@@ -45,7 +50,7 @@ class PostNotificationRule(NotificationModelRule):
     is_published_prev = models.BooleanField(default=False, null=True)
     is_published_next = models.BooleanField(default=True)
 
-    def get_users(self, instance: Post) -> List[User]:
+    def get_users(self, instance: M) -> list:
         return [instance.author]
 
     @classmethod
@@ -81,5 +86,5 @@ class PostNotificationReminder(NotificationModelReminder):
 
     is_published = models.BooleanField(default=True)
 
-    def get_users(self, instance: Post) -> List[User]:
+    def get_users(self, instance: M) -> List[User]:
         return [instance.author]

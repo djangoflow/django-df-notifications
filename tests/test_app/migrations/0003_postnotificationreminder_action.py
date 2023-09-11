@@ -4,15 +4,17 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('test_app', '0002_alter_postnotificationreminder_history_and_more'),
+        ("test_app", "0002_alter_postnotificationreminder_history_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='postnotificationreminder',
-            name='action',
-            field=models.TextField(default='', help_text='Python code to execute. You can use `instance` variable to access current model'),
+            model_name="postnotificationreminder",
+            name="action",
+            field=models.TextField(
+                default="",
+                help_text="Python code to execute. You can use `instance` variable to access current model",
+            ),
         ),
     ]

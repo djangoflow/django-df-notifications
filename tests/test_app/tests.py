@@ -1,16 +1,21 @@
+# type: ignore
+
+from unittest.mock import patch
+
+import pytest
 from dbtemplates.models import Template
+from django.contrib.auth import get_user_model
+from django.utils import timezone
+
 from df_notifications.channels import JSONPostWebhookChannel
 from df_notifications.models import NotificationHistory
 from df_notifications.tasks import send_notification_async
 from df_notifications.utils import send_notification
-from django.contrib.auth import get_user_model
-from django.utils import timezone
-from tests.test_app.models import Post
-from tests.test_app.models import PostNotificationReminder
-from tests.test_app.models import PostNotificationRule
-
-import pytest
-from unittest.mock import patch
+from tests.test_app.models import (
+    Post,
+    PostNotificationReminder,
+    PostNotificationRule,
+)
 
 User = get_user_model()
 
@@ -316,39 +321,39 @@ def test_default_templates_rendered_if_no_template_exists():
     assert notification.content["body.txt"] == post.description
 
 
-@patch('df_notifications.channels.requests.post')
+@patch("df_notifications.channels.requests.post")
 def test_json_post_webhook_channel(mock_requests_post):
     channel = JSONPostWebhookChannel()
     users = []
     context = {
-        'subject.txt': 'https://hooks.example.com/hook_endpoint  ',
-        'body.txt': ' Web hook Test',
-        'data.json': '{"notification": "Testing webhook"}'
+        "subject.txt": "https://hooks.example.com/hook_endpoint  ",
+        "body.txt": " Web hook Test",
+        "data.json": '{"notification": "Testing webhook"}',
     }
 
     channel.send(users, context)
 
     assert mock_requests_post.called is True
     mock_requests_post.assert_called_once_with(
-            'https://hooks.example.com/hook_endpoint',
-            data='Web hook Test',
-            json={"notification": "Testing webhook"}
-        )
+        "https://hooks.example.com/hook_endpoint",
+        data="Web hook Test",
+        json={"notification": "Testing webhook"},
+    )
 
 
-@patch('df_notifications.channels.requests.post')
+@patch("df_notifications.channels.requests.post")
 def test_json_post_webhook_channel_with_invalid_context(mock_requests_post):
     """
-        Test that an exception is raised, 
-        when seding wrong context data for JSONPostWebhookChannel
+    Test that an exception is raised,
+    when seding wrong context data for JSONPostWebhookChannel
     """
     channel = JSONPostWebhookChannel()
     users = []
     context = {
-        'subject.txt': 'https://hooks.example.com/hook_endpoint',
-        'data.json': '{"notification": "Testing webhook"}'
+        "subject.txt": "https://hooks.example.com/hook_endpoint",
+        "data.json": '{"notification": "Testing webhook"}',
     }
-    
+
     with pytest.raises(KeyError):
         channel.send(users, context)
 

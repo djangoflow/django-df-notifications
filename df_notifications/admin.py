@@ -1,11 +1,13 @@
-from .models import NotificationHistory
-from .models import PushAction
-from .models import PushActionCategory
-from .models import UserDevice
 from django.contrib import admin
 from fcm_django.admin import DeviceAdmin
 from fcm_django.models import FCMDevice
 
+from .models import (
+    NotificationHistory,
+    PushAction,
+    PushActionCategory,
+    UserDevice,
+)
 
 admin.site.unregister(FCMDevice)
 

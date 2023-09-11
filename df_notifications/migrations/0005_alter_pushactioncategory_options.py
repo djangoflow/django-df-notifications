@@ -4,14 +4,16 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('df_notifications', '0004_pushactioncategory_pushaction'),
+        ("df_notifications", "0004_pushactioncategory_pushaction"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='pushactioncategory',
-            options={'verbose_name': 'Push action category', 'verbose_name_plural': 'Push action categories'},
+            name="pushactioncategory",
+            options={
+                "verbose_name": "Push action category",
+                "verbose_name_plural": "Push action categories",
+            },
         ),
     ]
