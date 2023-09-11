@@ -1,0 +1,11 @@
+DF_NOTIFICATIONS_APPS_BASE = [
+    "df_notifications",
+]
+DF_NOTIFICATIONS_APPS_CHANNEL = [
+    "fcm_django",
+    "django_slack",
+]
+DF_NOTIFICATIONS_INSTALLED_APPS = [
+    *DF_NOTIFICATIONS_APPS_BASE,
+    *DF_NOTIFICATIONS_APPS_CHANNEL,
+]
