@@ -140,7 +140,7 @@ class BaseModelRule(GenericBase[M], models.Model):
     tracking_fields: Optional[List[str]] = None
 
     @classmethod
-    def is_field_changed(cls, instance: M, prev: Optional[M]) -> bool:
+    def compare_fields(cls, instance: M, prev: Optional[M]) -> bool:
         if cls.tracking_fields is None or prev is None:
             return True
 
@@ -260,7 +260,7 @@ class AsyncNotificationModelMixin(NotificationModelMixin):
         abstract = True
 
 
-class NotificationModelRule(NotificationModelMixin, BaseModelRule):
+class NotificationModelRule(BaseModelRule):
     def perform_action(self, instance: M) -> None:
         self.send(instance)
 
