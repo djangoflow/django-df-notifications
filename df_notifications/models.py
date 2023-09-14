@@ -206,7 +206,7 @@ class BaseModelRule(GenericBase[M], models.Model):
     def invoke(cls, instance: M) -> None:
         prev = getattr(instance, "_pre_save_instance", None)
 
-        if not cls.is_field_changed(instance, prev):
+        if not cls.compare_fields(instance, prev):
             return
 
         for action in cls.get_queryset(instance, prev):
@@ -298,7 +298,7 @@ class AsyncNotificationMixin:
         )
 
 
-class NotificationModelRule(BaseModelRule):
+class NotificationModelRule(NotificationModelMixin, BaseModelRule):
     def perform_action(self, instance: M) -> None:
         self.send(instance)
 
