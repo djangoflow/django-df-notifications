@@ -1,15 +1,19 @@
 from datetime import timedelta
+from functools import cache
 from typing import (
     TYPE_CHECKING,
     Any,
     Dict,
     Generic,
+    Iterable,
     List,
     Optional,
     Type,
     TypeVar,
+    Union,
 )
 
+from celery import current_app as app
 from django.conf import settings
 from django.contrib.contenttypes.fields import (
     GenericForeignKey,
@@ -18,10 +22,13 @@ from django.contrib.contenttypes.fields import (
 from django.contrib.contenttypes.models import ContentType
 from django.db import models, transaction
 from django.db.models import Count, Q, QuerySet
+from django.template.loader import render_to_string
 from django.utils import timezone
+from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
 from fcm_django.models import AbstractFCMDevice
 
+from df_notifications.channels import BaseChannel
 from df_notifications.fields import NoMigrationsChoicesField
 from df_notifications.settings import api_settings
 
@@ -38,6 +45,41 @@ else:
     class GenericBase:
         def __class_getitem__(cls, _):
             return cls
+
+
+@cache
+def get_channel_instance(channel: "NotificationModelMixin") -> BaseChannel:
+    return import_string(api_settings.CHANNELS[channel])()  # type: ignore
+
+
+def send_notification(
+    users: type[Iterable[Any]],
+    channel: str,
+    template_prefixes: Union[List[str], str],
+    context: Dict[str, Any],
+) -> "NotificationHistory":
+    if isinstance(template_prefixes, str):
+        template_prefixes = [template_prefixes]
+
+    channel_instance = get_channel_instance(channel)
+    parts = {}
+    for part in channel_instance.template_parts:
+        templates = []
+        for prefix in template_prefixes:
+            templates.append(f"{prefix}{channel}__{part}")
+            templates.append(f"{prefix}{part}")
+        parts[part] = render_to_string(templates, context=context).strip()
+
+    channel_instance.send(users, {**context, **parts})  # type: ignore
+
+    notification = NotificationHistory.objects.create(
+        channel=channel,
+        template_prefix=template_prefixes[0],
+        content=parts if api_settings.SAVE_HISTORY_CONTENT else "",
+        instance=context.get("instance"),
+    )
+    notification.users.set(users)
+    return notification
 
 
 class UserDevice(AbstractFCMDevice):
@@ -230,8 +272,6 @@ class NotificationModelMixin(models.Model):
         ]
 
     def send(self, instance: M) -> None:
-        from .utils import send_notification
-
         notification = send_notification(
             self.get_users(instance),  # type: ignore
             self.channel,
@@ -244,20 +284,18 @@ class NotificationModelMixin(models.Model):
         abstract = True
 
 
-class AsyncNotificationModelMixin(NotificationModelMixin):
+class AsyncNotificationMixin:
     def send(self, instance: M) -> None:
-        from .tasks import send_model_notification_async
-
         transaction.on_commit(
-            lambda: send_model_notification_async.delay(
-                self._meta.label_lower,
-                str(self.pk),
-                str(instance.pk),
+            lambda: app.send_task(
+                "df_notifications.tasks.send_model_notification_task",
+                args=[
+                    self._meta.label_lower,
+                    str(self.pk),
+                    str(instance.pk),
+                ],
             )
         )
-
-    class Meta:
-        abstract = True
 
 
 class NotificationModelRule(BaseModelRule):
@@ -317,13 +355,11 @@ class NotificationModelReminder(NotificationModelMixin, BaseModelReminder):
         abstract = True
 
 
-class NotificationModelAsyncRule(AsyncNotificationModelMixin, NotificationModelRule):
+class NotificationModelAsyncRule(AsyncNotificationMixin, NotificationModelRule):
     class Meta:
         abstract = True
 
 
-class NotificationModelAsyncReminder(
-    AsyncNotificationModelMixin, NotificationModelReminder
-):
+class NotificationModelAsyncReminder(AsyncNotificationMixin, NotificationModelReminder):
     class Meta:
         abstract = True

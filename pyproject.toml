@@ -27,6 +27,7 @@ urls = { homepage = "https://apexive.com/" }
 dependencies = [
     "django",
     "djangorestframework",
+    "django-df-api-drf",
     "firebase_admin",
     "requests",
     "django_slack",
@@ -39,7 +40,6 @@ dependencies = [
 
 [project.optional-dependencies]
 test = [
-    "django-df-api-drf",
     "pytest",
     "pytest-django",
     "django-stubs[compatible-mypy]",
@@ -49,6 +49,8 @@ test = [
     "types-urllib3",
     "django-dbtemplates",
     "pytest-cov",
+    "pytest-mock",
+    "pytest-celery",
 ]
 
 [build-system]

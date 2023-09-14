@@ -13,8 +13,7 @@ from django.utils.safestring import mark_safe
 from import_export.admin import ImportExportMixin
 from import_export.resources import ModelResource
 
-from df_notifications.models import M, NotificationModelMixin
-from df_notifications.utils import get_channel_instance
+from df_notifications.models import M, NotificationModelMixin, get_channel_instance
 
 
 def save_previous_instance(

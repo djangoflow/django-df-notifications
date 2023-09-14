@@ -1,8 +1,10 @@
-from df_api_drf.defaults import DF_API_DRF_INSTALLED_APPS
-from df_api_drf.defaults import REST_FRAMEWORK
-from df_api_drf.defaults import SPECTACULAR_SETTINGS
-from df_notifications.defaults import DF_NOTIFICATIONS_INSTALLED_APPS
+from df_api_drf.defaults import (
+    DF_API_DRF_INSTALLED_APPS,
+    REST_FRAMEWORK,
+    SPECTACULAR_SETTINGS,
+)
 
+from df_notifications.defaults import DF_NOTIFICATIONS_INSTALLED_APPS
 
 DEBUG = True
 
@@ -88,8 +90,8 @@ ALLOWED_HOSTS = ["*"]
 CELERY_BROKER_URL = "memory://"
 CELERY_RESULT_BACKEND = "cache+memory://"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
-CELERY_TASK_ALWAYS_EAGER = True
-CELERY_TASK_EAGER_PROPAGATES = True
+CELERY_TASK_ALWAYS_EAGER = False
+CELERY_TASK_EAGER_PROPAGATES = False
 
 
 DF_NOTIFICATIONS = {

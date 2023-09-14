@@ -1,17 +1,22 @@
 # type: ignore
-
+from typing import Any
 from unittest.mock import patch
 
 import pytest
+from celery import Celery
 from dbtemplates.models import Template
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from pytest_mock import MockerFixture
 
 from df_notifications.channels import JSONPostWebhookChannel
-from df_notifications.models import NotificationHistory
-from df_notifications.tasks import send_notification_async
-from df_notifications.utils import send_notification
+from df_notifications.models import (
+    NotificationHistory,
+    send_notification,
+)
+from df_notifications.tasks import send_notification_task
 from tests.test_app.models import (
+    AsyncPostNotificationRule,
     Post,
     PostNotificationReminder,
     PostNotificationRule,
@@ -43,6 +48,16 @@ def setup_published_notification():
     action.save()
 
 
+def setup_async_published_notification():
+    action = AsyncPostNotificationRule(
+        is_published_next=True,
+        is_published_prev=False,
+        channel="console",
+        template_prefix="df_notifications/posts/published/",
+    )
+    action.save()
+
+
 def test_post_published_notification_created():
     setup_published_notification()
     setup_templates()
@@ -61,6 +76,38 @@ def test_post_published_notification_created():
     notification = notifications[0]
     assert notification.content["subject.txt"] == f"New post: {post.title}"
     assert notification.content["body.txt"] == post.description
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("df_notifications.models.transaction.on_commit", new=lambda fn: fn())
+def test_post_published_notification_created_async(
+    mocker: MockerFixture, celery_app: Celery, celery_worker: Any
+) -> None:
+    setup_async_published_notification()
+    setup_templates()
+
+    spy = mocker.spy(celery_app, "send_task")
+    user = User.objects.create(
+        email="test@test.com",
+    )
+    Post.objects.create(
+        title="Title 1",
+        description="Content 1",
+        is_published=True,
+        author=user,
+    )
+
+    # No notifications should be created yet
+    notifications = NotificationHistory.objects.all()
+    assert len(notifications) == 0
+    # And async task was scheduled
+    assert spy.call_count == 1
+
+    # Simulate task execution
+    spy.spy_return.get(timeout=5)
+
+    notifications = NotificationHistory.objects.all()
+    assert len(notifications) == 1
 
 
 def test_post_non_published_notification_not_created():
@@ -223,7 +270,7 @@ def test_send_notification_async_without_model():
         content="{{ description }}",
     )
 
-    send_notification_async(
+    send_notification_task(
         [user.id],
         "console",
         "df_notifications/posts/published/",

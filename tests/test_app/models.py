@@ -10,6 +10,7 @@ from df_notifications.decorators import (
     register_rule_model,
 )
 from df_notifications.models import (
+    AsyncNotificationMixin,
     NotifiableModelMixin,
     NotificationModelReminder,
     NotificationModelRule,
@@ -36,8 +37,7 @@ class Post(NotifiableModelMixin):
         )
 
 
-@register_rule_model
-class PostNotificationRule(NotificationModelRule):
+class BasePostNotificationRule(NotificationModelRule):
     model = Post
     admin_list_display = [
         "template_prefix",
@@ -56,7 +56,7 @@ class PostNotificationRule(NotificationModelRule):
     @classmethod
     def get_queryset(
         cls, instance: Post, prev: Optional[Post]
-    ) -> QuerySet["PostNotificationRule"]:
+    ) -> QuerySet["BasePostNotificationRule"]:
         qs = cls.objects.filter(
             is_published_next=instance.is_published,
         )
@@ -68,6 +68,19 @@ class PostNotificationRule(NotificationModelRule):
             )
 
         return qs
+
+    class Meta:
+        abstract = True
+
+
+@register_rule_model
+class PostNotificationRule(BasePostNotificationRule):
+    pass
+
+
+@register_rule_model
+class AsyncPostNotificationRule(AsyncNotificationMixin, BasePostNotificationRule):
+    pass
 
 
 @register_reminder_model
