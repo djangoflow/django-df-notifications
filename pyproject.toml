@@ -2,7 +2,7 @@
 name = "django-df-notifications"
 description = "Opinionated Django Omnichannel Notifications."
 readme = "README.md"
-version = "1.2.0"
+version = "1.2.1"
 authors = [
     { name = "Apexive OSS", email = "open-source@apexive.com" },
 ]
@@ -59,7 +59,9 @@ build-backend = 'setuptools.build_meta'
 
 [tool.setuptools]
 include-package-data = true
-packages = ["df_notifications"]
+
+[tool.setuptools.packages.find]
+include =  ["df_notifications*"]
 
 [tool.pycodestyle]
 max-line-length = 160
