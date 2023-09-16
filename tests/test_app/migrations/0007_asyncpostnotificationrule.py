@@ -7,7 +7,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("df_notifications", "0006_alter_userdevice_registration_id"),
+        ("df_notifications", "0005_alter_pushactioncategory_options"),
         (
             "test_app",
             "0006_rename_template_postnotificationreminder_template_prefix_and_more",
