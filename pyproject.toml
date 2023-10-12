@@ -2,7 +2,7 @@
 name = "django-df-notifications"
 description = "Opinionated Django Omnichannel Notifications."
 readme = "README.md"
-version = "1.2.1"
+version = "1.2.2"
 authors = [
     { name = "Apexive OSS", email = "open-source@apexive.com" },
 ]
@@ -31,7 +31,7 @@ dependencies = [
     "firebase_admin",
     "requests",
     "django_slack",
-    "fcm_django",
+    "fcm_django>=1.0.15",
     "celery",
     "django-import-export",
     "django-celery-beat",
