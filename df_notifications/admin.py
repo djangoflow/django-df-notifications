@@ -1,8 +1,11 @@
 from django.contrib import admin
+from django.db.models import QuerySet
+from django.http import HttpRequest
 from fcm_django.admin import DeviceAdmin
 from fcm_django.models import FCMDevice
 
 from .models import (
+    CustomPushMessage,
     NotificationHistory,
     PushAction,
     PushActionCategory,
@@ -41,3 +44,20 @@ class NotificationHistoryAdmin(admin.ModelAdmin):
         "template_prefix",
         "channel",
     )
+
+
+@admin.register(CustomPushMessage)
+class CustomPushMessageAdmin(admin.ModelAdmin):
+    list_display = ("title", "created", "sent")
+    date_hierarchy = "created"
+    search_fields = ("title",)
+    autocomplete_fields = ("audience",)
+
+    def send(self, request: HttpRequest, queryset: QuerySet[CustomPushMessage]) -> None:
+        for obj in queryset:
+            obj.send()
+        self.message_user(request, "Messages sent")
+
+    send.short_description = "Send selected messages"
+
+    actions = [send]

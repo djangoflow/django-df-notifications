@@ -54,13 +54,15 @@ class FirebasePushChannel(BaseChannel):
 
             devices = UserDevice.objects.all()
 
+        data = json.loads(context["data.json"])
         devices.filter(user__in=users).send_message(
             Message(
                 notification=Notification(
                     title=context["subject.txt"],
                     body=context["body.txt"],
+                    image=data.get("image"),
                 ),
-                data=json.loads(context["data.json"]),
+                data=data,
             ),
         )
 

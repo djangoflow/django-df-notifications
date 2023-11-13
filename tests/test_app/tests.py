@@ -1,4 +1,5 @@
 # type: ignore
+import json
 from typing import Any
 from unittest.mock import patch
 
@@ -11,6 +12,7 @@ from pytest_mock import MockerFixture
 
 from df_notifications.channels import JSONPostWebhookChannel
 from df_notifications.models import (
+    CustomPushMessage,
     NotificationHistory,
     send_notification,
 )
@@ -405,3 +407,28 @@ def test_json_post_webhook_channel_with_invalid_context(mock_requests_post):
         channel.send(users, context)
 
     assert mock_requests_post.called is False
+
+
+def test_send_custom_push_message() -> None:
+    user = User.objects.create(
+        email="test@test.com",
+    )
+    message: CustomPushMessage = CustomPushMessage.objects.create(
+        title="Custom title",
+        body="Custom body",
+        action_url="/custom-url",
+        image="/custom-image.png",
+    )
+    message.audience.set([user])
+
+    message.send()
+
+    assert message.sent is not None
+    assert len(NotificationHistory.objects.all()) == 1
+    notification = NotificationHistory.objects.all()[0]
+    assert notification.content["subject.txt"] == "Custom title"
+    assert notification.content["body.txt"] == "Custom body"
+    assert json.loads(notification.content["data.json"]) == {
+        "action_url": "/custom-url",
+        "image": "/custom-image.png",
+    }

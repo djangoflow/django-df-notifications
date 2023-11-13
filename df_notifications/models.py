@@ -1,3 +1,4 @@
+import json
 from datetime import timedelta
 from functools import cache
 from typing import (
@@ -28,7 +29,7 @@ from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
 from fcm_django.models import AbstractFCMDevice
 
-from df_notifications.channels import BaseChannel
+from df_notifications.channels import BaseChannel, FirebasePushChannel
 from df_notifications.fields import NoMigrationsChoicesField
 from df_notifications.settings import api_settings
 
@@ -363,3 +364,36 @@ class NotificationModelAsyncRule(AsyncNotificationMixin, NotificationModelRule):
 class NotificationModelAsyncReminder(AsyncNotificationMixin, NotificationModelReminder):
     class Meta:
         abstract = True
+
+
+class CustomPushMessage(models.Model):
+    title = models.CharField(max_length=255)
+    body = models.TextField()
+    image = models.ImageField(upload_to="push_images", blank=True, null=True)
+    action_url = models.CharField(blank=True, null=True, max_length=255)
+    audience = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True)
+    created = models.DateTimeField(auto_now_add=True, db_index=True)
+    sent = models.DateTimeField(null=True, blank=True, db_index=True, editable=False)
+
+    def send(self) -> None:
+        data = {}
+        if self.image:
+            data["image"] = self.image.url
+        if self.action_url:
+            data["action_url"] = self.action_url
+        context = {
+            "subject.txt": self.title,
+            "body.txt": self.body,
+            "data.json": json.dumps(data),
+        }
+
+        FirebasePushChannel().send(self.audience.all(), context)
+        notification = NotificationHistory.objects.create(
+            channel="push",
+            template_prefix="",
+            content=context,
+            instance=self,
+        )
+        notification.users.set(self.audience.all())
+        self.sent = timezone.now()
+        self.save()
