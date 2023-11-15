@@ -16,6 +16,7 @@ from typing import (
 
 from celery import current_app as app
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import (
     GenericForeignKey,
     GenericRelation,
@@ -35,13 +36,16 @@ from df_notifications.settings import api_settings
 
 M = TypeVar("M", bound=models.Model)
 
+
 # https://code.djangoproject.com/ticket/33174
 if TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractUser as User
 
     class GenericBase(Generic[M]):
         pass
 
 else:
+    User = get_user_model()  # type: ignore
 
     class GenericBase:
         def __class_getitem__(cls, _):
@@ -371,7 +375,11 @@ class CustomPushMessage(models.Model):
     body = models.TextField()
     image = models.ImageField(upload_to="push_images", blank=True, null=True)
     action_url = models.CharField(blank=True, null=True, max_length=255)
-    audience = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True)
+    audience = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        help_text="Leave blank to send to all users",
+    )
     created = models.DateTimeField(auto_now_add=True, db_index=True)
     sent = models.DateTimeField(null=True, blank=True, db_index=True, editable=False)
 
@@ -386,8 +394,8 @@ class CustomPushMessage(models.Model):
             "body.txt": self.body,
             "data.json": json.dumps(data),
         }
-
-        FirebasePushChannel().send(self.audience.all(), context)
+        audience = self.audience.all()
+        FirebasePushChannel().send(audience or User.objects.all(), context)
         notification = NotificationHistory.objects.create(
             channel="push",
             template_prefix="",
