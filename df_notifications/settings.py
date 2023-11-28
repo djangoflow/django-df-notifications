@@ -11,6 +11,9 @@ DEFAULTS = {
         "slack": "df_notifications.channels.SlackChannel",
         "sms": "df_notifications.channels.TwilioSMSChannel",
     },
+    "CONTEXT_PROCESSORS": [
+        "df_notifications.context_processors.base_url",
+    ],
     "SAVE_HISTORY_CONTENT": True,
     "REMINDERS_CHECK_PERIOD": 60,
 }

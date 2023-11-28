@@ -22,7 +22,6 @@ from django.contrib.contenttypes.fields import (
     GenericRelation,
 )
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.sites.models import Site
 from django.db import models, transaction
 from django.db.models import Count, Q, QuerySet
 from django.template.loader import render_to_string
@@ -266,10 +265,14 @@ class NotificationModelMixin(models.Model):
         return []
 
     def get_context(self, instance: M) -> Dict[str, Any]:
-        return {
-            **self.context,
+        context = {
             "instance": instance,
-            "base_url": f"https://{Site.objects.get_current().domain}",
+        }
+        for context_processor in api_settings.CONTEXT_PROCESSORS:
+            context.update(import_string(context_processor)(instance))
+        return {
+            **context,
+            **self.context,
         }
 
     def get_template_prefixes(self) -> list:
