@@ -11,6 +11,7 @@ from django.utils import timezone
 from pytest_mock import MockerFixture
 
 from df_notifications.channels import JSONPostWebhookChannel
+from df_notifications.decorators import disable_notification_signal
 from df_notifications.models import (
     CustomPushMessage,
     NotificationHistory,
@@ -432,3 +433,22 @@ def test_send_custom_push_message() -> None:
         "action_url": "/custom-url",
         "image": "/custom-image.png",
     }
+
+
+def test_disable_notification_signal() -> None:
+    setup_published_notification()
+    setup_templates()
+
+    user = User.objects.create(
+        email="test@test.com",
+    )
+
+    with disable_notification_signal(Post):
+        Post.objects.create(
+            title="Title 1",
+            description="Content 1",
+            is_published=True,
+            author=user,
+        )
+    notifications = NotificationHistory.objects.all()
+    assert len(notifications) == 0
