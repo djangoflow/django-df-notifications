@@ -10,7 +10,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from pytest_mock import MockerFixture
 
-from df_notifications.channels import JSONPostWebhookChannel
+from df_notifications.channels import FirebasePushChannel, JSONPostWebhookChannel
 from df_notifications.decorators import disable_notification_signal
 from df_notifications.models import (
     CustomPushMessage,
@@ -452,3 +452,21 @@ def test_disable_notification_signal() -> None:
         )
     notifications = NotificationHistory.objects.all()
     assert len(notifications) == 0
+
+
+def test_firebase_push_channel() -> None:
+    user = User.objects.create(
+        email="test@test.com",
+    )
+    FirebasePushChannel().send(
+        users=[user],
+        context={
+            "subject.txt": "subject",
+            "body.txt": "body",
+            "data.json": json.dumps(
+                {
+                    "action_url": "/custom-url",
+                }
+            ),
+        },
+    )

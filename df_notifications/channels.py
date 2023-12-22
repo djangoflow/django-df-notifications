@@ -3,11 +3,17 @@ import logging
 from typing import Dict, Iterable
 
 import requests
+from df_api_drf.resolvers import site_url
 from django.core.mail import EmailMultiAlternatives
 from django.utils import timezone
 from django_slack import slack_message
 from firebase_admin.firestore import client
-from firebase_admin.messaging import Message, Notification
+from firebase_admin.messaging import (
+    Message,
+    Notification,
+    WebpushConfig,
+    WebpushFCMOptions,
+)
 from otp_twilio.models import TwilioSMSDevice
 
 
@@ -54,17 +60,26 @@ class FirebasePushChannel(BaseChannel):
 
             devices = UserDevice.objects.all()
 
-        data = json.loads(context["data.json"])
-        devices.filter(user__in=users).send_message(
-            Message(
+        if users:
+            data = json.loads(context["data.json"])
+            message = Message(
                 notification=Notification(
                     title=context["subject.txt"],
                     body=context["body.txt"],
                     image=data.get("image"),
                 ),
                 data=data,
-            ),
-        )
+            )
+            if action_url := data.get("action_url"):
+                message.webpush = WebpushConfig(
+                    fcm_options=WebpushFCMOptions(
+                        link=site_url(
+                            user=next(iter(users)),
+                        )
+                        + action_url
+                    )
+                )
+            devices.filter(user__in=users).send_message(message)
 
 
 class JSONPostWebhookChannel(BaseChannel):
