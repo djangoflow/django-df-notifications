@@ -39,13 +39,11 @@ M = TypeVar("M", bound=models.Model)
 
 # https://code.djangoproject.com/ticket/33174
 if TYPE_CHECKING:
-    from django.contrib.auth.models import AbstractUser as User
 
     class GenericBase(Generic[M]):
         pass
 
 else:
-    User = get_user_model()  # type: ignore
 
     class GenericBase:
         def __class_getitem__(cls, _):
@@ -389,6 +387,11 @@ class CustomPushMessage(models.Model):
     sent = models.DateTimeField(null=True, blank=True, db_index=True, editable=False)
 
     def send(self) -> None:
+        if TYPE_CHECKING:
+            from django.contrib.auth.models import AbstractUser as User
+        else:
+            User = get_user_model()
+
         data = {}
         if self.image:
             data["image"] = self.image.url
