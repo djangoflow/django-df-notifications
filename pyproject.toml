@@ -2,7 +2,7 @@
 name = "django-df-notifications"
 description = "Opinionated Django Omnichannel Notifications."
 readme = "README.md"
-version = "1.2.10"
+version = "1.2.11"
 authors = [
     { name = "Apexive OSS", email = "open-source@apexive.com" },
 ]
@@ -27,7 +27,7 @@ urls = { homepage = "https://apexive.com/" }
 dependencies = [
     "django",
     "djangorestframework",
-    "django-df-api-drf>=1.0.3",
+    "django-df-api-drf>=1.0.4",
     "firebase_admin",
     "requests",
     "django_slack",

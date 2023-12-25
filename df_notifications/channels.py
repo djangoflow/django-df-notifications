@@ -3,7 +3,7 @@ import logging
 from typing import Dict, Iterable
 
 import requests
-from df_api_drf.resolvers import site_url
+from df_api_drf.resolvers import client_url
 from django.core.mail import EmailMultiAlternatives
 from django.utils import timezone
 from django_slack import slack_message
@@ -73,7 +73,7 @@ class FirebasePushChannel(BaseChannel):
             if action_url := data.get("action_url"):
                 message.webpush = WebpushConfig(
                     fcm_options=WebpushFCMOptions(
-                        link=site_url(
+                        link=client_url(
                             user=next(iter(users)),
                         )
                         + action_url
