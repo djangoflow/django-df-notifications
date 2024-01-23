@@ -6,6 +6,7 @@ from fcm_django.models import FCMDevice
 
 from .models import (
     CustomPushMessage,
+    CustomPushNotification,
     NotificationHistory,
     PushAction,
     PushActionCategory,
@@ -54,6 +55,23 @@ class CustomPushMessageAdmin(admin.ModelAdmin):
     autocomplete_fields = ("audience",)
 
     def send(self, request: HttpRequest, queryset: QuerySet[CustomPushMessage]) -> None:
+        for obj in queryset:
+            obj.send()
+        self.message_user(request, "Messages sent")
+
+    send.short_description = "Send selected messages"
+
+    actions = [send]
+
+
+@admin.register(CustomPushNotification)
+class CustomPushNotificationAdmin(admin.ModelAdmin):
+    list_display = ("title", "created", "modified", "sent")
+    date_hierarchy = "created"
+    search_fields = ("title",)
+    autocomplete_fields = ("audience",)
+
+    def send(self, request: HttpRequest, queryset: QuerySet[CustomPushNotification]) -> None:
         for obj in queryset:
             obj.send()
         self.message_user(request, "Messages sent")
