@@ -413,3 +413,51 @@ class CustomPushMessage(models.Model):
         notification.users.set(self.audience.all())
         self.sent = timezone.now()
         self.save()
+
+class CustomPushNotification(models.Model):
+    title = models.CharField(max_length=255)
+    body = models.TextField()
+    image = models.ImageField(upload_to="push_images", blank=True, null=True)
+    audience = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        help_text="Leave blank to send to all users",
+    )
+    created = models.DateTimeField(auto_now_add=True, db_index=True)
+    modified = models.DateTimeField(auto_now=True, db_index=True)
+    sent = models.DateTimeField(null=True, blank=True, db_index=True, editable=False)
+
+    def get_context(self) -> dict:
+        if TYPE_CHECKING:
+            from django.contrib.auth.models import AbstractUser as User
+        else:
+            User = get_user_model()
+
+        data: dict = {}
+        if self.image:
+            data["image"] = self.image.url
+
+        return {
+            "subject.txt": self.title,
+            "body.txt": self.body,
+            "data.json": json.dumps(data),
+        }
+    
+    def create_notification(self, context: dict) -> None:
+        notification = NotificationHistory.objects.create(
+            channel="push",
+            template_prefix="",
+            content=context,
+            instance=self,
+        )
+        notification.users.set(self.audience.all())
+        self.sent = timezone.now()
+        self.save()
+
+
+    def send(self) -> None:
+        context = self.get_context()
+        audience = self.audience.all()
+
+        FirebasePushChannel().send(audience or User.objects.all(), context)
+        self.create_notification(context)
