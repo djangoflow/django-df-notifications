@@ -155,7 +155,7 @@ class NotificationHistory(models.Model):
     content_type = models.ForeignKey(
         ContentType, on_delete=models.CASCADE, null=True, blank=True
     )
-    instance_id = models.PositiveBigIntegerField(null=True, blank=True)
+    instance_id = models.CharField(max_length=255, null=True, blank=True)
     instance = GenericForeignKey("content_type", "instance_id")
 
     objects = NotificationHistoryQuerySet.as_manager()
