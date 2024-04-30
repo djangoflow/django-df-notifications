@@ -336,10 +336,9 @@ class NotificationModelReminder(NotificationModelMixin, BaseModelReminder):
     )
 
     def get_model_queryset(self) -> QuerySet[M]:
-        return (
+        qs = (
             super(NotificationModelReminder, self)
             .get_model_queryset()
-            .filter(**{f"{self.MODIFIED_MODEL_FIELD}__lt": timezone.now() - self.delay})
             .annotate(
                 notification_count=Count(
                     "notifications__id",
@@ -353,6 +352,11 @@ class NotificationModelReminder(NotificationModelMixin, BaseModelReminder):
             )
             .distinct()
         )
+        if self.MODIFIED_MODEL_FIELD:
+            qs = qs.filter(
+                **{f"{self.MODIFIED_MODEL_FIELD}__lt": timezone.now() - self.delay}
+            )
+        return qs
 
     def perform_action(self, instance: M) -> None:
         self.send(instance)
