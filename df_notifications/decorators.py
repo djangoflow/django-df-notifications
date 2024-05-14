@@ -114,6 +114,8 @@ def register_notification_model_admin(model_class: Type[object]) -> None:
 
         actions = [populate]
 
+    return model_class
+
 
 notification_receivers = {}
 
