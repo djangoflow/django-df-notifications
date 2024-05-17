@@ -169,6 +169,9 @@ class NotificationHistory(models.Model):
             models.Index(fields=["content_type", "instance_id", "created"]),
         ]
 
+    def resend(self) -> None:
+        get_channel_instance(self.channel).send(self.users.all(), self.content)
+
 
 class NotifiableModelMixin(models.Model):
     notifications = GenericRelation(NotificationHistory, "instance_id")

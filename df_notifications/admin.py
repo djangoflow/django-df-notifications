@@ -45,6 +45,15 @@ class NotificationHistoryAdmin(admin.ModelAdmin):
         "channel",
     )
 
+    def resend(
+        self, request: HttpRequest, queryset: QuerySet[NotificationHistory]
+    ) -> None:
+        for obj in queryset:
+            obj.resend()
+        self.message_user(request, "Messages resent")
+
+    actions = [resend]
+
 
 @admin.register(CustomPushMessage)
 class CustomPushMessageAdmin(admin.ModelAdmin):
